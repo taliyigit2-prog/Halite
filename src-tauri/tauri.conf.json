@@ -42,6 +42,9 @@
     "shortDescription": "Free & open-source AI music toolkit",
     "longDescription": "Halite is a free and open-source AI music toolkit. Separate any song into stems (vocals, drums, bass, other), download audio from supported sites, and view synchronized lyrics.",
     "copyright": "MIT License",
+    "macOS": {
+      "signingIdentity": "-"
+    },
     "resources": {
       "resources/models/htdemucs.onnx": "models/htdemucs.onnx",
       "resources/models/htdemucs_fp16weights.onnx": "models/htdemucs_fp16weights.onnx",
