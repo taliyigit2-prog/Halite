@@ -135,36 +135,211 @@ pub fn write_wav(path: &Path, samples: &[f32], sample_rate: u32) -> Result<i64> 
     Ok(size)
 }
 
-pub fn ffmpeg_path() -> Result<std::path::PathBuf> {
-    let _ = ffmpeg_sidecar::download::auto_download();
-    Ok(ffmpeg_sidecar::paths::ffmpeg_path())
+fn ffmpeg_on_path() -> Option<std::path::PathBuf> {
+    let candidates: &[&str] = {
+        #[cfg(target_os = "macos")]
+        {
+            &["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg", "/usr/bin/ffmpeg"]
+        }
+        #[cfg(target_os = "windows")]
+        {
+            &[]
+        }
+        #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+        {
+            &["/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg"]
+        }
+    };
+    for c in candidates {
+        let p = std::path::Path::new(c);
+        if ffmpeg_is_usable(p) {
+            return Some(p.to_path_buf());
+        }
+    }
+    let executable = if cfg!(target_os = "windows") {
+        "ffmpeg.exe"
+    } else {
+        "ffmpeg"
+    };
+    if let Some(path) = std::env::var_os("PATH") {
+        for dir in std::env::split_paths(&path) {
+            let candidate = dir.join(executable);
+            if ffmpeg_is_usable(&candidate) {
+                return Some(candidate);
+            }
+        }
+    }
+    None
+}
+
+fn ffmpeg_is_usable(path: &Path) -> bool {
+    path.is_file()
+        && std::process::Command::new(path)
+            .arg("-version")
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .map(|status| status.success())
+            .unwrap_or(false)
+}
+
+static FFMPEG_INSTALL_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+pub fn ffmpeg_path(
+    data_dir: &Path,
+    cancel: &std::sync::atomic::AtomicBool,
+) -> Result<std::path::PathBuf> {
+    if cancel.load(std::sync::atomic::Ordering::SeqCst) {
+        return Err(Error::Message("HALITE_CANCELLED".to_string()));
+    }
+    // Prefer an already-installed ffmpeg (no download needed).
+    if let Some(p) = ffmpeg_on_path() {
+        return Ok(p);
+    }
+
+    let bin_dir = data_dir.join("bin");
+    let executable = if cfg!(target_os = "windows") {
+        "ffmpeg.exe"
+    } else {
+        "ffmpeg"
+    };
+    let target = bin_dir.join(executable);
+    if ffmpeg_is_usable(&target) {
+        return Ok(target);
+    }
+
+    // ffmpeg-sidecar's convenience installer writes next to the application
+    // binary, which is read-only after a normal macOS/Windows installation.
+    // Install explicitly into the per-user application data directory instead.
+    let _guard = FFMPEG_INSTALL_LOCK
+        .lock()
+        .map_err(|_| Error::Ffmpeg("HALITE_FFMPEG_SETUP|installer lock failed".to_string()))?;
+    if cancel.load(std::sync::atomic::Ordering::SeqCst) {
+        return Err(Error::Message("HALITE_CANCELLED".to_string()));
+    }
+    if ffmpeg_is_usable(&target) {
+        return Ok(target);
+    }
+
+    std::fs::create_dir_all(&bin_dir)
+        .map_err(|e| Error::Ffmpeg(format!("HALITE_FFMPEG_SETUP|{e}")))?;
+    let url = ffmpeg_sidecar::download::ffmpeg_download_url()
+        .map_err(|e| Error::Ffmpeg(format!("HALITE_FFMPEG_SETUP|{e}")))?;
+    let staging = bin_dir.join(".ffmpeg-install");
+    let _ = std::fs::remove_dir_all(&staging);
+    std::fs::create_dir_all(&staging)
+        .map_err(|e| Error::Ffmpeg(format!("HALITE_FFMPEG_SETUP|{e}")))?;
+    let install_result = (|| -> Result<()> {
+        let archive = ffmpeg_sidecar::download::download_ffmpeg_package(url, &staging)
+            .map_err(|e| Error::Ffmpeg(format!("HALITE_FFMPEG_SETUP|{e}")))?;
+        ffmpeg_sidecar::download::unpack_ffmpeg_without_extras(&archive, &staging)
+            .map_err(|e| Error::Ffmpeg(format!("HALITE_FFMPEG_SETUP|{e}")))?;
+        let staged_binary = staging.join(executable);
+        if !ffmpeg_is_usable(&staged_binary) {
+            return Err(Error::Ffmpeg(
+                "HALITE_FFMPEG_SETUP|download completed but ffmpeg was not usable".to_string(),
+            ));
+        }
+        if target.exists() {
+            std::fs::remove_file(&target)
+                .map_err(|e| Error::Ffmpeg(format!("HALITE_FFMPEG_SETUP|{e}")))?;
+        }
+        std::fs::rename(staged_binary, &target)
+            .map_err(|e| Error::Ffmpeg(format!("HALITE_FFMPEG_SETUP|{e}")))?;
+        Ok(())
+    })();
+    let _ = std::fs::remove_dir_all(&staging);
+    install_result?;
+
+    if !ffmpeg_is_usable(&target) {
+        return Err(Error::Ffmpeg(
+            "HALITE_FFMPEG_SETUP|download completed but ffmpeg was not found".to_string(),
+        ));
+    }
+    Ok(target)
 }
 
 /// Transcode a WAV file to the requested format using ffmpeg.
-pub fn transcode(input: &Path, output: &Path, format: &str) -> Result<()> {
-    let ffmpeg = ffmpeg_path()?;
+pub fn transcode(
+    data_dir: &Path,
+    input: &Path,
+    output: &Path,
+    format: &str,
+    cancel: &std::sync::atomic::AtomicBool,
+) -> Result<()> {
+    let ffmpeg = ffmpeg_path(data_dir, cancel)?;
     let codec = match format {
         "mp3" => "libmp3lame",
         "flac" => "flac",
         "m4a" | "aac" | "mp4" => "aac",
         _ => "pcm_s16le",
     };
-    let status = std::process::Command::new(ffmpeg)
-        .args([
-            "-y",
-            "-i",
-            input.to_str().unwrap_or(""),
-            "-codec:a",
-            codec,
-            output.to_str().unwrap_or(""),
-        ])
-        .status()
-        .map_err(|e| Error::Ffmpeg(e.to_string()))?;
+    let mut child = std::process::Command::new(ffmpeg)
+        .arg("-y")
+        .arg("-nostdin")
+        .arg("-nostats")
+        .arg("-loglevel")
+        .arg("error")
+        .arg("-i")
+        .arg(input)
+        .arg("-codec:a")
+        .arg(codec)
+        .arg(output)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| Error::Ffmpeg(format!("HALITE_FFMPEG_FAILED|{e}")))?;
+    let stderr = match child.stderr.take() {
+        Some(stderr) => stderr,
+        None => {
+            let _ = child.kill();
+            let _ = child.wait();
+            return Err(Error::Ffmpeg(
+                "HALITE_FFMPEG_FAILED|stderr unavailable".to_string(),
+            ));
+        }
+    };
+    let stderr_thread = std::thread::spawn(move || {
+        use std::io::Read;
+        let mut text = String::new();
+        let _ = std::io::BufReader::new(stderr).read_to_string(&mut text);
+        text
+    });
+    let status = loop {
+        if cancel.load(std::sync::atomic::Ordering::SeqCst) {
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = stderr_thread.join();
+            let _ = std::fs::remove_file(output);
+            return Err(Error::Message("HALITE_CANCELLED".to_string()));
+        }
+        match child.try_wait() {
+            Ok(Some(status)) => break status,
+            Ok(None) => std::thread::sleep(std::time::Duration::from_millis(75)),
+            Err(error) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                let _ = stderr_thread.join();
+                return Err(Error::Ffmpeg(format!("HALITE_FFMPEG_FAILED|{error}")));
+            }
+        }
+    };
+    let stderr = stderr_thread.join().unwrap_or_default();
     if !status.success() {
+        let detail = stderr
+            .lines()
+            .last()
+            .unwrap_or("unknown ffmpeg error")
+            .trim();
         return Err(Error::Ffmpeg(format!(
-            "ffmpeg exited with status {:?}",
+            "HALITE_FFMPEG_FAILED|ffmpeg exited with status {:?}: {detail}",
             status.code()
         )));
+    }
+    if std::fs::metadata(output).map(|meta| meta.len()).unwrap_or(0) == 0 {
+        return Err(Error::Ffmpeg(
+            "HALITE_FFMPEG_FAILED|ffmpeg reported success but produced no output".to_string(),
+        ));
     }
     Ok(())
 }

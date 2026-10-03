@@ -8,7 +8,12 @@
   "scripts": {
     "dev": "tauri dev",
     "build": "tauri build",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "generate-locales": "node scripts/generate-locales.mjs",
+    "check-locales": "node scripts/generate-locales.mjs --check",
+    "check-js": "node scripts/check-javascript.mjs",
+    "fetch-models": "node scripts/fetch-models.mjs",
+    "prepare-assets": "npm run generate-locales && npm run fetch-models"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

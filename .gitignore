@@ -6,6 +6,10 @@ src-tauri/target/
 src-tauri/gen/
 target/
 
+# Bundled AI models (downloaded at build time via scripts/fetch-models.mjs)
+src-tauri/resources/models/*
+!src-tauri/resources/models/.gitkeep
+
 # OS files
 .DS_Store
 Thumbs.db

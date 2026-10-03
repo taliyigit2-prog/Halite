@@ -71,41 +71,45 @@ impl Db {
                 format     TEXT NOT NULL,
                 created_at INTEGER NOT NULL
             );
+            DELETE FROM jobs WHERE NOT EXISTS (
+                SELECT 1 FROM stems WHERE stems.job_id = jobs.id
+            );
             "#,
         )?;
         Ok(Self { conn })
     }
 
-    pub fn insert_job(
-        &self,
+    pub fn insert_completed_job(
+        &mut self,
         source_path: &str,
         source_name: &str,
         model_id: &str,
         output_dir: &str,
         duration_secs: f64,
+        stems: &[(String, String, i64)],
     ) -> Result<i64> {
-        self.conn
-            .execute(
-                "INSERT INTO jobs (source_path, source_name, model_id, output_dir, duration_secs, created_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                params![
-                    source_path,
-                    source_name,
-                    model_id,
-                    output_dir,
-                    duration_secs,
-                    now_millis()
-                ],
-            )?;
-        Ok(self.conn.last_insert_rowid())
-    }
-
-    pub fn insert_stem(&self, job_id: i64, name: &str, path: &str, bytes: i64) -> Result<()> {
-        self.conn.execute(
-            "INSERT INTO stems (job_id, name, path, bytes) VALUES (?1, ?2, ?3, ?4)",
-            params![job_id, name, path, bytes],
+        let transaction = self.conn.transaction()?;
+        transaction.execute(
+            "INSERT INTO jobs (source_path, source_name, model_id, output_dir, duration_secs, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![
+                source_path,
+                source_name,
+                model_id,
+                output_dir,
+                duration_secs,
+                now_millis()
+            ],
         )?;
-        Ok(())
+        let job_id = transaction.last_insert_rowid();
+        for (name, path, bytes) in stems {
+            transaction.execute(
+                "INSERT INTO stems (job_id, name, path, bytes) VALUES (?1, ?2, ?3, ?4)",
+                params![job_id, name, path, bytes],
+            )?;
+        }
+        transaction.commit()?;
+        Ok(job_id)
     }
 
     pub fn list_jobs(&self, limit: i64) -> Result<Vec<Job>> {
@@ -155,6 +159,15 @@ impl Db {
             })
         })?;
         rows.collect::<rusqlite::Result<Vec<_>>>().map_err(Error::from)
+    }
+
+    pub fn is_known_stem_path(&self, path: &str) -> Result<bool> {
+        let count: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM stems WHERE path = ?1",
+            params![path],
+            |row| row.get(0),
+        )?;
+        Ok(count > 0)
     }
 
     pub fn delete_job(&self, id: i64) -> Result<()> {

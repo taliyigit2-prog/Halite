@@ -1,8 +1,8 @@
-use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::error::{Error, Result};
 use crate::separation::demucs::{Separator, SAMPLE_RATE};
@@ -40,20 +40,11 @@ struct ErrorPayload {
 }
 
 #[derive(Debug, Clone, Serialize)]
-struct ModelProgress {
-    model_id: String,
-    pct: f64,
-}
-
-fn make_task_id() -> String {
-    use std::sync::atomic::{AtomicU64, Ordering};
-    use std::time::{SystemTime, UNIX_EPOCH};
-    static COUNTER: AtomicU64 = AtomicU64::new(0);
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_nanos())
-        .unwrap_or(0);
-    format!("{:x}-{}", nanos, COUNTER.fetch_add(1, Ordering::Relaxed))
+struct DownloadDonePayload {
+    task_id: String,
+    title: String,
+    path: String,
+    ext: String,
 }
 
 fn downloads_dir() -> String {
@@ -63,40 +54,23 @@ fn downloads_dir() -> String {
         .unwrap_or_else(|| ".".to_string())
 }
 
+fn validate_task_id(task_id: &str) -> Result<()> {
+    if task_id.is_empty()
+        || task_id.len() > 64
+        || !task_id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
+    {
+        return Err(Error::Message("invalid task id".to_string()));
+    }
+    Ok(())
+}
+
 // ---------- Models ----------
 
 #[tauri::command]
 pub fn get_models(state: State<Arc<AppState>>) -> Vec<models::ModelInfo> {
-    models::list_models(&state.data_dir)
-}
-
-#[tauri::command]
-pub fn install_model(
-    app: AppHandle,
-    state: State<Arc<AppState>>,
-    model_id: String,
-) -> Result<()> {
-    let data_dir = state.data_dir.clone();
-    let id = model_id.clone();
-    std::thread::spawn(move || {
-        let result = models::download_model(&data_dir, &id, |pct| {
-            let _ = app.emit("model://progress", ModelProgress { model_id: id.clone(), pct });
-        });
-        match result {
-            Ok(_) => {
-                let _ = app.emit("model://done", ModelProgress { model_id: id.clone(), pct: 1.0 });
-            }
-            Err(e) => {
-                let _ = app.emit("model://error", ErrorPayload { task_id: id, message: e.to_string() });
-            }
-        }
-    });
-    Ok(())
-}
-
-#[tauri::command]
-pub fn delete_model(state: State<Arc<AppState>>, model_id: String) -> Result<()> {
-    models::delete_model(&state.data_dir, &model_id)
+    models::list_models(&state.resource_dir)
 }
 
 // ---------- Separation ----------
@@ -105,9 +79,10 @@ pub fn delete_model(state: State<Arc<AppState>>, model_id: String) -> Result<()>
 pub async fn separate(
     app: AppHandle,
     state: State<'_, Arc<AppState>>,
+    task_id: String,
     options: SeparateOptions,
 ) -> Result<TaskStarted> {
-    let task_id = make_task_id();
+    validate_task_id(&task_id)?;
     let state = state.inner().clone();
     let cancel = state.cancel_flag(&task_id);
     let return_task_id = task_id.clone();
@@ -122,7 +97,7 @@ pub async fn separate(
             }
             Err(e) => {
                 let msg = e.to_string();
-                if msg.contains("cancelled") {
+                if msg.contains("HALITE_CANCELLED") {
                     let _ = app.emit("separation://cancelled", ErrorPayload { task_id, message: msg });
                 } else {
                     let _ = app.emit("separation://error", ErrorPayload { task_id, message: msg });
@@ -142,50 +117,72 @@ fn run_separation(
     app: &AppHandle,
 ) -> Result<i64> {
     let source = std::path::Path::new(&options.source_path);
+    if !source.is_file() {
+        return Err(Error::Message("HALITE_INVALID_AUDIO|file not found".to_string()));
+    }
     let source_name = source
         .file_name()
         .map(|s| s.to_string_lossy().to_string())
         .unwrap_or_default();
 
-    // Ensure model is present.
-    let model_path = models::model_path(&state.data_dir, &options.model_id);
-    if !model_path.exists() {
-        return Err(Error::Message(
-            "model not installed; install it first".to_string(),
-        ));
+    let model_path = models::bundled_model_path(&state.resource_dir, &options.model_id)
+        .ok_or_else(|| Error::Message("HALITE_MODEL_MISSING|unknown model".to_string()))?;
+    if !model_path.is_file() {
+        return Err(Error::Message("HALITE_MODEL_MISSING".to_string()));
     }
 
+    let fmt = options.format.to_ascii_lowercase();
+    if !matches!(fmt.as_str(), "wav" | "mp3" | "flac" | "m4a") {
+        return Err(Error::Message("HALITE_INVALID_FORMAT".to_string()));
+    }
+    let mode = options.mode.as_deref().unwrap_or("all");
+    if !matches!(mode, "all" | "vocals" | "instrumental") {
+        return Err(Error::Message("HALITE_INVALID_MODE".to_string()));
+    }
+    let start_sec = options.start_sec.unwrap_or(0.0);
+    if !start_sec.is_finite() || start_sec < 0.0 {
+        return Err(Error::Message("HALITE_INVALID_TRIM".to_string()));
+    }
+    if let Some(end_sec) = options.end_sec {
+        if !end_sec.is_finite() || end_sec <= start_sec {
+            return Err(Error::Message("HALITE_INVALID_TRIM".to_string()));
+        }
+    }
+
+    let output_root = std::path::PathBuf::from(
+        options.output_dir.clone().unwrap_or_else(downloads_dir),
+    );
+    std::fs::create_dir_all(&output_root)
+        .map_err(|e| Error::Message(format!("HALITE_OUTPUT|{e}")))?;
+    if !output_root.is_dir() {
+        return Err(Error::Message("HALITE_OUTPUT|not a directory".to_string()));
+    }
+    let base = safe_file_component(
+        &source
+            .file_stem()
+            .map(|s| s.to_string_lossy().to_string())
+            .unwrap_or_else(|| "stem".to_string()),
+    );
+    let job_output_dir = unique_output_dir(&output_root, &format!("{base} - Halite Stems"));
+    std::fs::create_dir(&job_output_dir)
+        .map_err(|e| Error::Message(format!("HALITE_OUTPUT|{e}")))?;
+    let mut output_guard = OutputGuard::new(job_output_dir.clone());
+
     // Decode.
-    let (samples, rate) = crate::audio::decode_to_stereo(source)?;
+    let (samples, rate) = crate::audio::decode_to_stereo(source)
+        .map_err(|error| Error::Message(format!("HALITE_INVALID_AUDIO|{error}")))?;
     let samples = crate::audio::resample_stereo(&samples, rate, SAMPLE_RATE);
     let samples = crate::audio::trim_stereo(
         &samples,
         SAMPLE_RATE,
-        options.start_sec.unwrap_or(0.0),
+        start_sec,
         options.end_sec,
     );
     if samples.len() < 2 {
-        return Err(Error::Message("empty audio after trim".to_string()));
+        return Err(Error::Message("HALITE_INVALID_TRIM|empty audio".to_string()));
     }
 
     let duration_secs = (samples.len() / 2) as f64 / SAMPLE_RATE as f64;
-
-    let output_dir = options
-        .output_dir
-        .clone()
-        .unwrap_or_else(downloads_dir);
-
-    // Insert job.
-    let job_id = {
-        let db = state.db.lock().unwrap();
-        db.insert_job(
-            &options.source_path,
-            &source_name,
-            &options.model_id,
-            &output_dir,
-            duration_secs,
-        )?
-    };
 
     // De-interleave to planar.
     let n = samples.len() / 2;
@@ -201,58 +198,124 @@ fn run_separation(
 
     let progress_task_id = task_id.to_string();
     let progress_app = app.clone();
-    let stems = separator.separate(&[mix_l, mix_r], move |pct| {
+    let stems = separator.separate(&[mix_l, mix_r], cancel, move |pct| {
         let _ = progress_app.emit(
             "separation://progress",
             ProgressPayload {
                 task_id: progress_task_id.clone(),
-                pct,
+                pct: pct * 0.9,
             },
         );
     })?;
 
-    // Write stems.
-    std::fs::create_dir_all(&output_dir)?;
-    let base = source
-        .file_stem()
-        .map(|s| s.to_string_lossy().to_string())
-        .unwrap_or_else(|| "stem".to_string());
-
-    let fmt = options.format.to_lowercase();
-    let mode = options.mode.as_deref().unwrap_or("all");
+    // Write stems into a collision-free job directory.
     let mut written = Vec::new();
-    for (stem_name, interleaved) in build_outputs(&stems, mode) {
+    let outputs = build_outputs(&stems, mode);
+    let output_count = outputs.len().max(1);
+    for (index, (stem_name, interleaved)) in outputs.into_iter().enumerate() {
         if cancel.load(std::sync::atomic::Ordering::SeqCst) {
-            return Err(Error::Message("cancelled".to_string()));
+            return Err(Error::Message("HALITE_CANCELLED".to_string()));
         }
-        let wav_path = std::path::Path::new(&output_dir).join(format!(
-            "{base}.{stem_name}.wav"
-        ));
+        let wav_path = job_output_dir.join(format!("{base}.{stem_name}.wav"));
         crate::audio::write_wav(&wav_path, &interleaved, SAMPLE_RATE)?;
 
         let final_path = if fmt == "wav" {
             wav_path
         } else {
-            let out_path = std::path::Path::new(&output_dir).join(format!(
-                "{base}.{stem_name}.{fmt}"
-            ));
-            crate::audio::transcode(&wav_path, &out_path, &fmt)?;
+            let out_path = job_output_dir.join(format!("{base}.{stem_name}.{fmt}"));
+            crate::audio::transcode(&state.data_dir, &wav_path, &out_path, &fmt, cancel)?;
             let _ = std::fs::remove_file(&wav_path);
             out_path
         };
 
+        if cancel.load(std::sync::atomic::Ordering::SeqCst) {
+            return Err(Error::Message("HALITE_CANCELLED".to_string()));
+        }
+
         let bytes = std::fs::metadata(&final_path).map(|m| m.len() as i64).unwrap_or(0);
         written.push((stem_name, final_path.to_string_lossy().to_string(), bytes));
+        let _ = app.emit(
+            "separation://progress",
+            ProgressPayload {
+                task_id: task_id.to_string(),
+                pct: 0.9 + ((index + 1) as f64 / output_count as f64) * 0.1,
+            },
+        );
     }
 
-    {
-        let db = state.db.lock().unwrap();
-        for (name, path, bytes) in &written {
-            db.insert_stem(job_id, name, path, *bytes)?;
-        }
-    }
+    let output_dir_string = job_output_dir.to_string_lossy().to_string();
+    let job_id = state
+        .db
+        .lock()
+        .map_err(|_| Error::Message("database lock failed".to_string()))?
+        .insert_completed_job(
+            &options.source_path,
+            &source_name,
+            &options.model_id,
+            &output_dir_string,
+            duration_secs,
+            &written,
+        )?;
+    output_guard.keep();
 
     Ok(job_id)
+}
+
+struct OutputGuard {
+    path: std::path::PathBuf,
+    keep: bool,
+}
+
+impl OutputGuard {
+    fn new(path: std::path::PathBuf) -> Self {
+        Self { path, keep: false }
+    }
+
+    fn keep(&mut self) {
+        self.keep = true;
+    }
+}
+
+impl Drop for OutputGuard {
+    fn drop(&mut self) {
+        if !self.keep {
+            let _ = std::fs::remove_dir_all(&self.path);
+        }
+    }
+}
+
+fn safe_file_component(value: &str) -> String {
+    let cleaned: String = value
+        .chars()
+        .map(|ch| {
+            if ch.is_control() || matches!(ch, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') {
+                '_'
+            } else {
+                ch
+            }
+        })
+        .take(140)
+        .collect();
+    let cleaned = cleaned.trim().trim_end_matches('.');
+    if cleaned.is_empty() {
+        "audio".to_string()
+    } else {
+        cleaned.to_string()
+    }
+}
+
+fn unique_output_dir(root: &std::path::Path, name: &str) -> std::path::PathBuf {
+    let first = root.join(name);
+    if !first.exists() {
+        return first;
+    }
+    for index in 2..10_000 {
+        let candidate = root.join(format!("{name} ({index})"));
+        if !candidate.exists() {
+            return candidate;
+        }
+    }
+    root.join(format!("{name} - {}", std::process::id()))
 }
 
 fn interleave(l: &[f32], r: &[f32]) -> Vec<f32> {
@@ -299,13 +362,19 @@ pub fn cancel_separation(state: State<Arc<AppState>>, task_id: String) {
 
 #[tauri::command]
 pub fn list_jobs(state: State<Arc<AppState>>) -> Result<Vec<crate::db::Job>> {
-    let db = state.db.lock().unwrap();
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| Error::Message("database lock failed".to_string()))?;
     db.list_jobs(200)
 }
 
 #[tauri::command]
 pub fn delete_job(state: State<Arc<AppState>>, id: i64) -> Result<()> {
-    let db = state.db.lock().unwrap();
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| Error::Message("database lock failed".to_string()))?;
     db.delete_job(id)
 }
 
@@ -317,37 +386,51 @@ pub fn save_preset(
     stems_json: String,
     format: String,
 ) -> Result<i64> {
-    let db = state.db.lock().unwrap();
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| Error::Message("database lock failed".to_string()))?;
     db.save_preset(&name, &model_id, &stems_json, &format)
 }
 
 #[tauri::command]
 pub fn list_presets(state: State<Arc<AppState>>) -> Result<Vec<crate::db::Preset>> {
-    let db = state.db.lock().unwrap();
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| Error::Message("database lock failed".to_string()))?;
     db.list_presets()
 }
 
 #[tauri::command]
 pub fn delete_preset(state: State<Arc<AppState>>, id: i64) -> Result<()> {
-    let db = state.db.lock().unwrap();
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| Error::Message("database lock failed".to_string()))?;
     db.delete_preset(id)
 }
 
 // ---------- File dialogs & path helpers ----------
 
 #[tauri::command]
-pub fn pick_audio_files(app: AppHandle) -> Option<Vec<String>> {
+pub async fn pick_audio_files(app: AppHandle) -> Option<Vec<String>> {
     use tauri_plugin_dialog::DialogExt;
     let files = app
         .dialog()
         .file()
         .add_filter("Audio", &["mp3", "wav", "flac", "m4a", "ogg", "aac", "aiff", "mp4"])
         .blocking_pick_files();
-    files.map(|fs| fs.into_iter().filter_map(|f| f.into_path().ok()).map(|p| p.to_string_lossy().to_string()).collect())
+    files.map(|fs| {
+        fs.into_iter()
+            .filter_map(|f| f.into_path().ok())
+            .map(|p| p.to_string_lossy().to_string())
+            .collect()
+    })
 }
 
 #[tauri::command]
-pub fn pick_folder(app: AppHandle) -> Option<String> {
+pub async fn pick_folder(app: AppHandle) -> Option<String> {
     use tauri_plugin_dialog::DialogExt;
     app.dialog()
         .file()
@@ -357,27 +440,63 @@ pub fn pick_folder(app: AppHandle) -> Option<String> {
 }
 
 #[tauri::command]
-pub fn open_path(path: String) {
+pub fn open_path(path: String) -> Result<()> {
+    if !std::path::Path::new(&path).exists() {
+        return Err(Error::Message("HALITE_OUTPUT_MISSING".to_string()));
+    }
     #[cfg(target_os = "macos")]
-    let _ = std::process::Command::new("open").arg(&path).spawn();
+    let result = std::process::Command::new("open").arg(&path).spawn();
     #[cfg(target_os = "windows")]
-    let _ = std::process::Command::new("cmd").args(["/C", "start", "", &path]).spawn();
+    let result = std::process::Command::new("explorer").arg(&path).spawn();
     #[cfg(target_os = "linux")]
-    let _ = std::process::Command::new("xdg-open").arg(&path).spawn();
+    let result = std::process::Command::new("xdg-open").arg(&path).spawn();
+    result
+        .map(|_| ())
+        .map_err(|error| Error::Message(format!("HALITE_OPEN_FAILED|{error}")))
 }
 
 #[tauri::command]
-pub fn reveal_path(path: String) {
-    #[cfg(target_os = "macos")]
-    let _ = std::process::Command::new("open").arg("-R").arg(&path).spawn();
-    #[cfg(target_os = "windows")]
-    let _ = std::process::Command::new("explorer").arg(format!("/select,{path}")).spawn();
-    #[cfg(target_os = "linux")]
-    {
-        if let Some(parent) = std::path::Path::new(&path).parent() {
-            let _ = std::process::Command::new("xdg-open").arg(parent).spawn();
-        }
+pub fn reveal_path(path: String) -> Result<()> {
+    if !std::path::Path::new(&path).exists() {
+        return Err(Error::Message("HALITE_OUTPUT_MISSING".to_string()));
     }
+    #[cfg(target_os = "macos")]
+    let result = std::process::Command::new("open").arg("-R").arg(&path).spawn();
+    #[cfg(target_os = "windows")]
+    let result = std::process::Command::new("explorer").arg(format!("/select,{path}")).spawn();
+    #[cfg(target_os = "linux")]
+    let result = {
+        if let Some(parent) = std::path::Path::new(&path).parent() {
+            std::process::Command::new("xdg-open").arg(parent).spawn()
+        } else {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "path has no parent",
+            ))
+        }
+    };
+    result
+        .map(|_| ())
+        .map_err(|error| Error::Message(format!("HALITE_OPEN_FAILED|{error}")))
+}
+
+#[tauri::command]
+pub fn allow_audio_preview(
+    app: AppHandle,
+    state: State<Arc<AppState>>,
+    path: String,
+) -> Result<()> {
+    let known = state
+        .db
+        .lock()
+        .map_err(|_| Error::Message("database lock failed".to_string()))?
+        .is_known_stem_path(&path)?;
+    if !known || !std::path::Path::new(&path).is_file() {
+        return Err(Error::Message("HALITE_PREVIEW_DENIED".to_string()));
+    }
+    app.asset_protocol_scope()
+        .allow_file(&path)
+        .map_err(|e| Error::Message(format!("HALITE_PREVIEW_DENIED|{e}")))
 }
 
 // ---------- Download (yt-dlp) ----------
@@ -386,11 +505,12 @@ pub fn reveal_path(path: String) {
 pub async fn download(
     app: AppHandle,
     state: State<'_, Arc<AppState>>,
+    task_id: String,
     url: String,
     output_dir: Option<String>,
     format: String,
 ) -> Result<TaskStarted> {
-    let task_id = make_task_id();
+    validate_task_id(&task_id)?;
     let state = state.inner().clone();
     let cancel = state.cancel_flag(&task_id);
     let return_task_id = task_id.clone();
@@ -399,6 +519,7 @@ pub async fn download(
     tauri::async_runtime::spawn_blocking(move || {
         let result = crate::downloader::download(
             &state.data_dir,
+            &task_id,
             &url,
             std::path::Path::new(&output_dir),
             &format,
@@ -419,12 +540,17 @@ pub async fn download(
             Ok(r) => {
                 let _ = app.emit(
                     "download://done",
-                    crate::downloader::DownloadResult { title: r.title, path: r.path, ext: r.ext },
+                    DownloadDonePayload {
+                        task_id,
+                        title: r.title,
+                        path: r.path,
+                        ext: r.ext,
+                    },
                 );
             }
             Err(e) => {
                 let msg = e.to_string();
-                let event = if msg.contains("cancelled") { "download://cancelled" } else { "download://error" };
+                let event = if msg.contains("HALITE_CANCELLED") { "download://cancelled" } else { "download://error" };
                 let _ = app.emit(event, ErrorPayload { task_id, message: msg });
             }
         }
@@ -446,14 +572,22 @@ pub fn is_ytdlp_installed(state: State<Arc<AppState>>) -> bool {
 // ---------- Settings ----------
 
 #[tauri::command]
-pub fn get_settings(state: State<Arc<AppState>>) -> crate::state::Settings {
-    state.settings.lock().unwrap().clone()
+pub fn get_settings(state: State<Arc<AppState>>) -> Result<crate::state::Settings> {
+    state
+        .settings
+        .lock()
+        .map(|settings| settings.clone())
+        .map_err(|_| Error::Message("settings lock failed".to_string()))
 }
 
 #[tauri::command]
 pub fn set_settings(state: State<Arc<AppState>>, settings: crate::state::Settings) -> Result<()> {
+    let settings = settings.normalized();
     {
-        let mut s = state.settings.lock().unwrap();
+        let mut s = state
+            .settings
+            .lock()
+            .map_err(|_| Error::Message("settings lock failed".to_string()))?;
         *s = settings.clone();
     }
     settings.save(&state.data_dir)
@@ -486,7 +620,8 @@ pub fn get_now_playing() -> Option<crate::nowplaying::NowPlaying> {
 #[tauri::command]
 pub async fn analyze(path: String) -> Result<crate::bpm::Analysis> {
     tauri::async_runtime::spawn_blocking(move || {
-        let (samples, rate) = crate::audio::decode_to_stereo(std::path::Path::new(&path))?;
+        let (samples, rate) = crate::audio::decode_to_stereo(std::path::Path::new(&path))
+            .map_err(|error| Error::Message(format!("HALITE_INVALID_AUDIO|{error}")))?;
         crate::bpm::analyze(&samples, rate)
     })
     .await
@@ -508,5 +643,23 @@ pub fn get_system_info() -> SystemInfo {
         os: std::env::consts::OS.to_string(),
         arch: std::env::consts::ARCH.to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn task_ids_are_restricted_to_safe_components() {
+        assert!(validate_task_id("a0b1-uuid_value").is_ok());
+        assert!(validate_task_id("").is_err());
+        assert!(validate_task_id("../other-task").is_err());
+    }
+
+    #[test]
+    fn output_names_remove_platform_separators() {
+        assert_eq!(safe_file_component("a/b:c\\d"), "a_b_c_d");
+        assert_eq!(safe_file_component("..."), "audio");
     }
 }

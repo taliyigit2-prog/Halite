@@ -18,14 +18,13 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
-            let app_state = Arc::new(state::AppState::new(data_dir)?);
+            let resource_dir = app.path().resource_dir()?;
+            let app_state = Arc::new(state::AppState::new(data_dir, resource_dir)?);
             app.manage(app_state);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_models,
-            commands::install_model,
-            commands::delete_model,
             commands::separate,
             commands::cancel_separation,
             commands::list_jobs,
@@ -37,6 +36,7 @@ pub fn run() {
             commands::pick_folder,
             commands::open_path,
             commands::reveal_path,
+            commands::allow_audio_preview,
             commands::download,
             commands::cancel_download,
             commands::is_ytdlp_installed,

@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Once;
 
 use ort::session::builder::GraphOptimizationLevel;
@@ -62,10 +63,14 @@ impl Separator {
     pub fn separate(
         &mut self,
         mix: &[Vec<f32>],
+        cancel: &AtomicBool,
         mut on_progress: impl FnMut(f64),
     ) -> Result<Vec<[Vec<f32>; 2]>> {
+        if mix.len() < 2 {
+            return Err(Error::Message("expected stereo input".to_string()));
+        }
         let total = mix[0].len();
-        if mix.len() < 2 || mix[1].len() != total {
+        if mix[1].len() != total {
             return Err(Error::Message("expected stereo input".to_string()));
         }
 
@@ -78,6 +83,9 @@ impl Separator {
         let mut weight = vec![0f32; total];
 
         for i in 0..n_chunks {
+            if cancel.load(Ordering::SeqCst) {
+                return Err(Error::Message("HALITE_CANCELLED".to_string()));
+            }
             let start = i * STRIDE;
             let end = (start + N_SAMPLES).min(total);
             let clen = end - start;
@@ -101,9 +109,19 @@ impl Separator {
                 .run(ort::inputs!["mix" => input])
                 .map_err(|e| Error::Ort(e.to_string()))?;
 
-            let (_shape, data) = outputs["stems"]
+            if cancel.load(Ordering::SeqCst) {
+                return Err(Error::Message("HALITE_CANCELLED".to_string()));
+            }
+
+            let (shape, data) = outputs["stems"]
                 .try_extract_tensor::<f32>()
                 .map_err(|e| Error::Ort(e.to_string()))?;
+            let expected = 4 * 2 * N_SAMPLES;
+            if data.len() < expected || shape.len() != 4 {
+                return Err(Error::Ort(format!(
+                    "unexpected model output shape {shape:?}"
+                )));
+            }
 
             // data layout: [4][2][N]
             for s in 0..4usize {
@@ -139,8 +157,9 @@ impl Separator {
 
 fn make_window(n: usize, overlap: usize) -> Vec<f32> {
     let mut w = vec![1f32; n];
+    let denominator = overlap.saturating_sub(1).max(1) as f32;
     let fade: Vec<f32> = (0..overlap)
-        .map(|i| (i as f32) / (overlap as f32))
+        .map(|i| i as f32 / denominator)
         .collect();
     for i in 0..overlap {
         w[i] = fade[i];
