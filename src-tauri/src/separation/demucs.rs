@@ -19,16 +19,10 @@ static INIT: Once = Once::new();
 
 fn ensure_init() {
     INIT.call_once(|| {
-        #[cfg(target_os = "macos")]
-        {
-            let _ = ort::init()
-                .with_execution_providers([ort::ep::CoreML::default().build()])
-                .commit();
-        }
-        #[cfg(not(target_os = "macos"))]
-        {
-            let _ = ort::init().commit();
-        }
+        // Keep the global runtime provider-neutral. Execution providers belong
+        // to individual sessions; registering CoreML globally made even a CPU
+        // session fail while CoreML tried to create its compilation workspace.
+        let _ = ort::init().commit();
     });
 }
 
@@ -40,19 +34,27 @@ impl Separator {
     pub fn new(model_path: &Path, use_coreml: bool) -> Result<Self> {
         ensure_init();
 
-        let mut builder = Session::builder()
-            .map_err(|e| Error::Ort(e.to_string()))?
-            .with_optimization_level(GraphOptimizationLevel::Level3)
-            .map_err(|e| Error::Ort(e.to_string()))?;
-
         #[cfg(target_os = "macos")]
         if use_coreml {
-            builder = builder
-                .with_execution_providers([ort::ep::CoreML::default().build()])
-                .map_err(|e| Error::Ort(e.to_string()))?;
+            // CoreML does not support every ONNX graph and can also be
+            // unavailable on otherwise supported macOS versions. Prefer it,
+            // but always fall back to the CPU provider so separation remains
+            // functional instead of failing immediately.
+            let coreml_session: std::result::Result<Session, ort::Error> = (|| {
+                Session::builder()?
+                    .with_optimization_level(GraphOptimizationLevel::Level3)?
+                    .with_execution_providers([ort::ep::CoreML::default().build()])?
+                    .commit_from_file(model_path)
+            })();
+            if let Ok(session) = coreml_session {
+                return Ok(Self { session });
+            }
         }
 
-        let session = builder
+        let session = Session::builder()
+            .map_err(|e| Error::Ort(e.to_string()))?
+            .with_optimization_level(GraphOptimizationLevel::Level3)
+            .map_err(|e| Error::Ort(e.to_string()))?
             .commit_from_file(model_path)
             .map_err(|e| Error::Ort(e.to_string()))?;
         Ok(Self { session })
@@ -166,4 +168,49 @@ fn make_window(n: usize, overlap: usize) -> Vec<f32> {
         w[n - 1 - i] = fade[i];
     }
     w
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // This is intentionally ignored during the fast unit-test suite because it
+    // loads the 300 MB production model. Run it explicitly for release QA with:
+    // cargo test --release bundled_model_infers_on_cpu -- --ignored --nocapture
+    #[test]
+    #[ignore]
+    fn bundled_model_infers_on_cpu() {
+        let model = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("resources/models/htdemucs.onnx");
+        assert!(
+            model.is_file(),
+            "bundled model is missing: {}",
+            model.display()
+        );
+
+        let mut separator = Separator::new(&model, false).expect("model should load on CPU");
+        let samples = SAMPLE_RATE as usize * 2;
+        let mix = [vec![0.0; samples], vec![0.0; samples]];
+        let stems = separator
+            .separate(&mix, &AtomicBool::new(false), |_| {})
+            .expect("model should run on CPU");
+
+        assert_eq!(stems.len(), SOURCES.len());
+        assert!(stems
+            .iter()
+            .all(|stem| stem[0].len() == samples && stem[1].len() == samples));
+    }
+
+    #[test]
+    #[ignore]
+    fn bundled_model_loads_with_acceleration_fallback() {
+        let model = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("resources/models/htdemucs.onnx");
+        assert!(
+            model.is_file(),
+            "bundled model is missing: {}",
+            model.display()
+        );
+        Separator::new(&model, true).expect("CoreML or its CPU fallback should load the model");
+    }
 }
