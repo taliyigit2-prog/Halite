@@ -17,7 +17,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            language: "en".to_string(),
+            language: "auto".to_string(),
             theme: "system".to_string(),
             output_dir: None,
         }

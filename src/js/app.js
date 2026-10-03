@@ -6,6 +6,21 @@ const t = (k, v) => i18n.t(k, v);
 const $ = (sel) => document.querySelector(sel);
 
 const STEM_ORDER = ["drums", "bass", "other", "vocals"];
+const SUPPORTED_LANGS = ["en", "tr", "de", "es", "fr", "ru", "ja"];
+
+// Resolve the UI language: an explicit choice wins, otherwise follow the OS.
+function resolveLanguage(lang) {
+  if (SUPPORTED_LANGS.includes(lang)) return lang;
+  const candidates =
+    navigator.languages && navigator.languages.length
+      ? navigator.languages
+      : [navigator.language || "en"];
+  for (const l of candidates) {
+    const code = String(l).toLowerCase().split("-")[0];
+    if (SUPPORTED_LANGS.includes(code)) return code;
+  }
+  return "en";
+}
 
 const state = {
   settings: { language: "en", theme: "system", output_dir: null },
@@ -35,16 +50,30 @@ async function init() {
     /* browser fallback */
   }
 
-  await i18n.init(state.settings.language);
+  const lang = resolveLanguage(state.settings.language);
+  const wasAuto = state.settings.language !== lang;
+  state.settings.language = lang;
+
+  await i18n.init(lang);
   theme.setMode(state.settings.theme);
   theme.listen();
 
   await refreshModels();
   await refreshHistory();
   bindUI();
+  $("#sel-language").value = lang;
+  $("#sel-theme").value = ["light", "dark", "system"].includes(state.settings.theme)
+    ? state.settings.theme
+    : "system";
   await renderSystemInfo();
   i18n.apply();
   renderOutputDirs();
+
+  if (wasAuto) {
+    try {
+      await invoke("set_settings", { settings: state.settings });
+    } catch {}
+  }
 }
 
 // ---------- Models ----------
