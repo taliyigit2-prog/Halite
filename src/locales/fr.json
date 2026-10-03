@@ -1,0 +1,103 @@
+{
+  "tagline": "Outil musical IA",
+  "nav": {
+    "separate": "Séparer",
+    "download": "Télécharger",
+    "lyrics": "Paroles",
+    "settings": "Réglages"
+  },
+  "common": {
+    "cancel": "Annuler",
+    "open": "Ouvrir",
+    "reveal": "Afficher dans le Finder",
+    "delete": "Supprimer",
+    "install": "Installer",
+    "installed": "Installé",
+    "deleteModel": "Retirer",
+    "installing": "Installation…",
+    "downloading": "Téléchargement…",
+    "close": "Fermer",
+    "confirmDelete": "Voulez-vous vraiment supprimer ceci ?",
+    "notinstalled": "non installé"
+  },
+  "separate": {
+    "title": "Séparation des pistes",
+    "subtitle": "Séparez n'importe quelle chanson en voix, batterie, basse et autres — localement avec l'IA.",
+    "drop": "Glissez-déposez des fichiers audio ici",
+    "choose": "Choisir des fichiers",
+    "model": "Modèle",
+    "mode": "Sortie",
+    "mode.all": "Toutes les pistes (4)",
+    "mode.vocals": "Voix uniquement",
+    "mode.instrumental": "Instrumental uniquement",
+    "format": "Format",
+    "output": "Dossier de sortie",
+    "choosefolder": "Choisir un dossier",
+    "defaultfolder": "(Téléchargements)",
+    "trim": "Rogner (optionnel)",
+    "seconds": "s",
+    "analyze": "Analyse",
+    "analyzeBtn": "Détecter le BPM et la tonalité",
+    "start": "Lancer la séparation",
+    "history": "Historique",
+    "processing": "Traitement…",
+    "done": "Séparation terminée",
+    "error": "La séparation a échoué",
+    "cancelled": "Séparation annulée",
+    "noFile": "Ajoutez au moins un fichier audio",
+    "analyzing": "Analyse…",
+    "noModel": "Installez d'abord un modèle (Réglages → Modèles d'IA)",
+    "stemsReady": "pistes prêtes"
+  },
+  "stems": {
+    "drums": "batterie",
+    "bass": "basse",
+    "other": "autres",
+    "vocals": "voix",
+    "instrumental": "instrumental"
+  },
+  "download": {
+    "title": "Télécharger",
+    "subtitle": "Téléchargez de l'audio depuis YouTube, SoundCloud, Bandcamp et plus.",
+    "url": "URL",
+    "format": "Format",
+    "output": "Enregistrer dans",
+    "start": "Télécharger",
+    "done": "Téléchargement terminé",
+    "error": "Le téléchargement a échoué",
+    "cancelled": "Téléchargement annulé",
+    "needUrl": "Veuillez saisir une URL",
+    "installingYtDlp": "Préparation du téléchargeur…",
+    "pickFolder": "Choisir un dossier"
+  },
+  "lyrics": {
+    "title": "Paroles",
+    "subtitle": "Consultez les paroles synchronisées de la chanson en cours de lecture.",
+    "nowplaying": "En cours de lecture",
+    "search": "Rechercher une chanson…",
+    "searchBtn": "Rechercher",
+    "notfound": "Aucune parole trouvée",
+    "noSource": "Aucune source musicale détectée",
+    "instrumental": "Ce morceau est instrumental",
+    "loading": "Chargement…",
+    "nothingPlaying": "Rien n'est en lecture"
+  },
+  "settings": {
+    "title": "Réglages",
+    "language": "Langue",
+    "theme": "Thème",
+    "theme.system": "Système",
+    "theme.light": "Clair",
+    "theme.dark": "Sombre",
+    "models": "Modèles d'IA",
+    "about": "À propos",
+    "version": "Version",
+    "outputFolder": "Dossier de sortie par défaut"
+  },
+  "models": {
+    "htdemucs.name": "htdemucs — haute qualité",
+    "htdemucs.desc": "4 pistes : batterie, basse, autres, voix",
+    "htdemucs_fp16.name": "htdemucs — léger",
+    "htdemucs_fp16.desc": "Mêmes pistes, moitié du poids de téléchargement"
+  }
+}

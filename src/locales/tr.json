@@ -1,0 +1,103 @@
+{
+  "tagline": "Yapay Zekâ Müzik Aracı",
+  "nav": {
+    "separate": "Ayrıştır",
+    "download": "İndir",
+    "lyrics": "Şarkı Sözü",
+    "settings": "Ayarlar"
+  },
+  "common": {
+    "cancel": "İptal",
+    "open": "Aç",
+    "reveal": "Finder'da Göster",
+    "delete": "Sil",
+    "install": "Yükle",
+    "installed": "Yüklü",
+    "deleteModel": "Kaldır",
+    "installing": "Yükleniyor…",
+    "downloading": "İndiriliyor…",
+    "close": "Kapat",
+    "confirmDelete": "Bunu silmek istediğine emin misin?",
+    "notinstalled": "yüklü değil"
+  },
+  "separate": {
+    "title": "Stem Ayrıştırma",
+    "subtitle": "Herhangi bir şarkıyı vokal, davul, bas ve diğer katmanlara ayır — tamamen yerel yapay zekâ ile.",
+    "drop": "Ses dosyalarını buraya sürükle ve bırak",
+    "choose": "Dosya seç",
+    "model": "Model",
+    "mode": "Çıktı",
+    "mode.all": "Tüm katmanlar (4)",
+    "mode.vocals": "Yalnızca vokal",
+    "mode.instrumental": "Yalnızca enstrümantal",
+    "format": "Format",
+    "output": "Çıktı klasörü",
+    "choosefolder": "Klasör seç",
+    "defaultfolder": "(İndirilenler)",
+    "trim": "Kırpma (isteğe bağlı)",
+    "seconds": "sn",
+    "analyze": "Analiz",
+    "analyzeBtn": "BPM ve ton tespit et",
+    "start": "Ayrıştırmayı başlat",
+    "history": "Geçmiş",
+    "processing": "İşleniyor…",
+    "done": "Ayrıştırma tamamlandı",
+    "error": "Ayrıştırma başarısız",
+    "cancelled": "Ayrıştırma iptal edildi",
+    "noFile": "Lütfen en az bir ses dosyası ekleyin",
+    "analyzing": "Analiz ediliyor…",
+    "noModel": "Önce bir model yükleyin (Ayarlar → Yapay zekâ modelleri)",
+    "stemsReady": "katman hazır"
+  },
+  "stems": {
+    "drums": "davul",
+    "bass": "bas",
+    "other": "diğer",
+    "vocals": "vokal",
+    "instrumental": "enstrümantal"
+  },
+  "download": {
+    "title": "İndirme",
+    "subtitle": "YouTube, SoundCloud, Bandcamp ve daha fazlasından ses indirin.",
+    "url": "URL",
+    "format": "Format",
+    "output": "Kaydetme yeri",
+    "start": "İndir",
+    "done": "İndirme tamamlandı",
+    "error": "İndirme başarısız",
+    "cancelled": "İndirme iptal edildi",
+    "needUrl": "Lütfen bir URL girin",
+    "installingYtDlp": "İndirici hazırlanıyor…",
+    "pickFolder": "Klasör seç"
+  },
+  "lyrics": {
+    "title": "Şarkı Sözü",
+    "subtitle": "Şu an çalan şarkının senkronize sözlerini gör.",
+    "nowplaying": "Şu an çalıyor",
+    "search": "Şarkı ara…",
+    "searchBtn": "Ara",
+    "notfound": "Şarkı sözü bulunamadı",
+    "noSource": "Müzik kaynağı algılanamadı",
+    "instrumental": "Bu parça enstrümantal",
+    "loading": "Yükleniyor…",
+    "nothingPlaying": "Şu an bir şey çalmıyor"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "language": "Dil",
+    "theme": "Tema",
+    "theme.system": "Sistem",
+    "theme.light": "Açık",
+    "theme.dark": "Koyu",
+    "models": "Yapay zekâ modelleri",
+    "about": "Hakkında",
+    "version": "Sürüm",
+    "outputFolder": "Varsayılan çıktı klasörü"
+  },
+  "models": {
+    "htdemucs.name": "htdemucs — yüksek kalite",
+    "htdemucs.desc": "4 katman: davul, bas, diğer, vokal",
+    "htdemucs_fp16.name": "htdemucs — hafif",
+    "htdemucs_fp16.desc": "Aynı katmanlar, yarı indirme boyutu"
+  }
+}

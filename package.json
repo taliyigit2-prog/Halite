@@ -1,0 +1,16 @@
+{
+  "name": "halite",
+  "productName": "Halite",
+  "version": "0.1.0",
+  "description": "Free & open-source AI music toolkit: stem separation, downloads and lyrics.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

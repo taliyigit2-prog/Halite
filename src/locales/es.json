@@ -1,0 +1,103 @@
+{
+  "tagline": "Herramienta de música con IA",
+  "nav": {
+    "separate": "Separar",
+    "download": "Descargar",
+    "lyrics": "Letras",
+    "settings": "Ajustes"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "open": "Abrir",
+    "reveal": "Mostrar en Finder",
+    "delete": "Eliminar",
+    "install": "Instalar",
+    "installed": "Instalado",
+    "deleteModel": "Quitar",
+    "installing": "Instalando…",
+    "downloading": "Descargando…",
+    "close": "Cerrar",
+    "confirmDelete": "¿Seguro que quieres eliminar esto?",
+    "notinstalled": "no instalado"
+  },
+  "separate": {
+    "title": "Separación de pistas",
+    "subtitle": "Divide cualquier canción en voz, batería, bajo y otros — localmente con IA.",
+    "drop": "Arrastra archivos de audio aquí",
+    "choose": "Elegir archivos",
+    "model": "Modelo",
+    "mode": "Salida",
+    "mode.all": "Todas las pistas (4)",
+    "mode.vocals": "Solo voz",
+    "mode.instrumental": "Solo instrumental",
+    "format": "Formato",
+    "output": "Carpeta de salida",
+    "choosefolder": "Elegir carpeta",
+    "defaultfolder": "(Descargas)",
+    "trim": "Recortar (opcional)",
+    "seconds": "s",
+    "analyze": "Análisis",
+    "analyzeBtn": "Detectar BPM y tonalidad",
+    "start": "Iniciar separación",
+    "history": "Historial",
+    "processing": "Procesando…",
+    "done": "Separación completada",
+    "error": "La separación falló",
+    "cancelled": "Separación cancelada",
+    "noFile": "Añade al menos un archivo de audio",
+    "analyzing": "Analizando…",
+    "noModel": "Instala primero un modelo (Ajustes → Modelos de IA)",
+    "stemsReady": "pistas listas"
+  },
+  "stems": {
+    "drums": "batería",
+    "bass": "bajo",
+    "other": "otros",
+    "vocals": "voz",
+    "instrumental": "instrumental"
+  },
+  "download": {
+    "title": "Descargar",
+    "subtitle": "Descarga audio de YouTube, SoundCloud, Bandcamp y más.",
+    "url": "URL",
+    "format": "Formato",
+    "output": "Guardar en",
+    "start": "Descargar",
+    "done": "Descarga completada",
+    "error": "La descarga falló",
+    "cancelled": "Descarga cancelada",
+    "needUrl": "Introduce una URL",
+    "installingYtDlp": "Preparando el descargador…",
+    "pickFolder": "Elegir carpeta"
+  },
+  "lyrics": {
+    "title": "Letras",
+    "subtitle": "Mira las letras sincronizadas de la canción que suena.",
+    "nowplaying": "Sonando ahora",
+    "search": "Buscar una canción…",
+    "searchBtn": "Buscar",
+    "notfound": "No se encontraron letras",
+    "noSource": "No se detectó ninguna fuente de música",
+    "instrumental": "Esta pista es instrumental",
+    "loading": "Cargando…",
+    "nothingPlaying": "No suena nada ahora mismo"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "theme": "Tema",
+    "theme.system": "Sistema",
+    "theme.light": "Claro",
+    "theme.dark": "Oscuro",
+    "models": "Modelos de IA",
+    "about": "Acerca de",
+    "version": "Versión",
+    "outputFolder": "Carpeta de salida predeterminada"
+  },
+  "models": {
+    "htdemucs.name": "htdemucs — alta calidad",
+    "htdemucs.desc": "4 pistas: batería, bajo, otros, voz",
+    "htdemucs_fp16.name": "htdemucs — ligero",
+    "htdemucs_fp16.desc": "Mismas pistas, la mitad de tamaño de descarga"
+  }
+}

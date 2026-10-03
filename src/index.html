@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Halite</title>
+    <link rel="stylesheet" href="./styles/main.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" data-tauri-drag-region>
+        <div class="brand" data-tauri-drag-region>
+          <div class="brand-logo" aria-hidden="true">
+            <span class="bar b1"></span>
+            <span class="bar b2"></span>
+            <span class="bar b3"></span>
+            <span class="bar b4"></span>
+            <span class="bar b5"></span>
+          </div>
+          <div class="brand-text" data-tauri-drag-region>
+            <span class="brand-name">Halite</span>
+            <span class="brand-tag" data-i18n="tagline">AI Music Toolkit</span>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <button class="nav-item active" data-tab="separate">
+            <svg viewBox="0 0 24 24" class="ico"><path d="M9 18V6l10-2v12M9 18a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm10-2a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"/></svg>
+            <span data-i18n="nav.separate">Separate</span>
+          </button>
+          <button class="nav-item" data-tab="download">
+            <svg viewBox="0 0 24 24" class="ico"><path d="M12 3v10m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            <span data-i18n="nav.download">Download</span>
+          </button>
+          <button class="nav-item" data-tab="lyrics">
+            <svg viewBox="0 0 24 24" class="ico"><path d="M4 5v14M4 5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 0-2 2m0-4a2 2 0 0 1 2-2m14-8v12m-2-12h4m-4 0v4"/></svg>
+            <span data-i18n="nav.lyrics">Lyrics</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <button class="nav-item" data-tab="settings">
+            <svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+            <span data-i18n="nav.settings">Settings</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="content">
+        <!-- ===================== SEPARATE ===================== -->
+        <section class="tab active" id="tab-separate">
+          <header class="tab-header">
+            <h1 data-i18n="separate.title">Stem Separation</h1>
+            <p class="muted" data-i18n="separate.subtitle">Split any song into vocals, drums, bass and other — locally with AI.</p>
+          </header>
+
+          <div class="dropzone" id="dropzone">
+            <svg viewBox="0 0 24 24" class="ico big"><path d="M12 16V4m0 0 4 4m-4-4-4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            <p data-i18n="separate.drop">Drag &amp; drop audio files here</p>
+            <button class="btn btn-primary" id="btn-pick" data-i18n="separate.choose">Choose files</button>
+          </div>
+
+          <div class="file-list" id="file-list"></div>
+
+          <div class="panel">
+            <div class="field">
+              <label data-i18n="separate.model">Model</label>
+              <select id="sel-model"></select>
+            </div>
+            <div class="field">
+              <label data-i18n="separate.mode">Output</label>
+              <select id="sel-mode">
+                <option value="all" data-i18n="separate.mode.all">All stems (4)</option>
+                <option value="vocals" data-i18n="separate.mode.vocals">Vocals only</option>
+                <option value="instrumental" data-i18n="separate.mode.instrumental">Instrumental only</option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-i18n="separate.format">Format</label>
+              <select id="sel-format">
+                <option value="wav">WAV</option>
+                <option value="mp3">MP3</option>
+                <option value="flac">FLAC</option>
+                <option value="m4a">M4A</option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-i18n="separate.output">Output folder</label>
+              <button class="btn btn-ghost" id="btn-output" data-i18n="separate.choosefolder">Choose folder</button>
+              <span class="path-chip" id="output-dir" data-i18n="separate.defaultfolder">(Downloads)</span>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="field">
+              <label data-i18n="separate.trim">Trim (optional)</label>
+              <div class="row">
+                <input type="number" id="trim-start" class="input" min="0" step="1" placeholder="0:00" />
+                <span class="muted">–</span>
+                <input type="number" id="trim-end" class="input" min="0" step="1" placeholder="3:30" />
+                <span class="muted" data-i18n="separate.seconds">sec</span>
+              </div>
+            </div>
+            <div class="field">
+              <label data-i18n="separate.analyze">Analysis</label>
+              <button class="btn btn-ghost" id="btn-analyze" data-i18n="separate.analyzeBtn">Detect BPM &amp; key</button>
+              <span class="chip" id="analysis-result"></span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary btn-lg" id="btn-separate" data-i18n="separate.start">Start separation</button>
+            <button class="btn btn-danger btn-lg hidden" id="btn-cancel" data-i18n="common.cancel">Cancel</button>
+          </div>
+
+          <div class="progress hidden" id="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            <span class="progress-label" id="progress-label">0%</span>
+          </div>
+
+          <div class="queue hidden" id="queue"></div>
+
+          <h2 class="section-title" data-i18n="separate.history">History</h2>
+          <div class="history" id="history"></div>
+        </section>
+
+        <!-- ===================== DOWNLOAD ===================== -->
+        <section class="tab" id="tab-download">
+          <header class="tab-header">
+            <h1 data-i18n="download.title">Download</h1>
+            <p class="muted" data-i18n="download.subtitle">Download audio from YouTube, SoundCloud, Bandcamp and more.</p>
+          </header>
+
+          <div class="panel">
+            <div class="field grow">
+              <label data-i18n="download.url">URL</label>
+              <input type="text" id="dl-url" class="input" placeholder="https://www.youtube.com/watch?v=..." />
+            </div>
+            <div class="field">
+              <label data-i18n="download.format">Format</label>
+              <select id="dl-format">
+                <option value="mp3">MP3</option>
+                <option value="m4a">M4A</option>
+                <option value="wav">WAV</option>
+                <option value="flac">FLAC</option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-i18n="download.output">Save to</label>
+              <button class="btn btn-ghost" id="btn-dl-output" data-i18n="separate.choosefolder">Choose folder</button>
+              <span class="path-chip" id="dl-output-dir" data-i18n="separate.defaultfolder">(Downloads)</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary btn-lg" id="btn-download" data-i18n="download.start">Download</button>
+            <button class="btn btn-danger btn-lg hidden" id="btn-dl-cancel" data-i18n="common.cancel">Cancel</button>
+          </div>
+
+          <div class="progress hidden" id="dl-progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="dl-progress-fill"></div></div>
+            <span class="progress-label" id="dl-progress-label">0%</span>
+          </div>
+
+          <div class="history" id="dl-results"></div>
+        </section>
+
+        <!-- ===================== LYRICS ===================== -->
+        <section class="tab" id="tab-lyrics">
+          <header class="tab-header">
+            <h1 data-i18n="lyrics.title">Lyrics</h1>
+            <p class="muted" data-i18n="lyrics.subtitle">See synchronized lyrics for the song currently playing.</p>
+          </header>
+
+          <div class="panel lyrics-toolbar">
+            <button class="btn btn-primary" id="btn-now-playing" data-i18n="lyrics.nowplaying">Now playing</button>
+            <div class="field grow">
+              <input type="text" id="lyrics-search" class="input" placeholder="..." data-i18n-ph="lyrics.search" />
+            </div>
+            <button class="btn btn-ghost" id="btn-lyrics-search" data-i18n="lyrics.searchBtn">Search</button>
+          </div>
+
+          <div class="lyrics-nowplaying hidden" id="lyrics-nowplaying"></div>
+          <div class="lyrics-results" id="lyrics-results"></div>
+        </section>
+
+        <!-- ===================== SETTINGS ===================== -->
+        <section class="tab" id="tab-settings">
+          <header class="tab-header">
+            <h1 data-i18n="settings.title">Settings</h1>
+          </header>
+
+          <div class="panel">
+            <div class="field">
+              <label data-i18n="settings.language">Language</label>
+              <select id="sel-language">
+                <option value="en">English</option>
+                <option value="tr">Türkçe</option>
+                <option value="de">Deutsch</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="ru">Русский</option>
+                <option value="ja">日本語</option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-i18n="settings.theme">Theme</label>
+              <select id="sel-theme">
+                <option value="system" data-i18n="settings.theme.system">System</option>
+                <option value="light" data-i18n="settings.theme.light">Light</option>
+                <option value="dark" data-i18n="settings.theme.dark">Dark</option>
+              </select>
+            </div>
+          </div>
+
+          <h2 class="section-title" data-i18n="settings.models">AI models</h2>
+          <div class="models" id="models-list"></div>
+
+          <h2 class="section-title" data-i18n="settings.about">About</h2>
+          <div class="panel about">
+            <div class="brand-logo sm"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span><span class="bar b4"></span><span class="bar b5"></span></div>
+            <div>
+              <strong>Halite</strong>
+              <span class="muted" id="about-version"></span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>

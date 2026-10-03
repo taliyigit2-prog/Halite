@@ -1,0 +1,103 @@
+{
+  "tagline": "AI Music Toolkit",
+  "nav": {
+    "separate": "Separate",
+    "download": "Download",
+    "lyrics": "Lyrics",
+    "settings": "Settings"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "open": "Open",
+    "reveal": "Show in Finder",
+    "delete": "Delete",
+    "install": "Install",
+    "installed": "Installed",
+    "deleteModel": "Remove",
+    "installing": "Installing…",
+    "downloading": "Downloading…",
+    "close": "Close",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "notinstalled": "not installed"
+  },
+  "separate": {
+    "title": "Stem Separation",
+    "subtitle": "Split any song into vocals, drums, bass and other — locally with AI.",
+    "drop": "Drag & drop audio files here",
+    "choose": "Choose files",
+    "model": "Model",
+    "mode": "Output",
+    "mode.all": "All stems (4)",
+    "mode.vocals": "Vocals only",
+    "mode.instrumental": "Instrumental only",
+    "format": "Format",
+    "output": "Output folder",
+    "choosefolder": "Choose folder",
+    "defaultfolder": "(Downloads)",
+    "trim": "Trim (optional)",
+    "seconds": "sec",
+    "analyze": "Analysis",
+    "analyzeBtn": "Detect BPM & key",
+    "start": "Start separation",
+    "history": "History",
+    "processing": "Processing…",
+    "done": "Separation complete",
+    "error": "Separation failed",
+    "cancelled": "Separation cancelled",
+    "noFile": "Please add at least one audio file",
+    "analyzing": "Analyzing…",
+    "noModel": "Install a model first (Settings → AI models)",
+    "stemsReady": "stems ready"
+  },
+  "stems": {
+    "drums": "drums",
+    "bass": "bass",
+    "other": "other",
+    "vocals": "vocals",
+    "instrumental": "instrumental"
+  },
+  "download": {
+    "title": "Download",
+    "subtitle": "Download audio from YouTube, SoundCloud, Bandcamp and more.",
+    "url": "URL",
+    "format": "Format",
+    "output": "Save to",
+    "start": "Download",
+    "done": "Download complete",
+    "error": "Download failed",
+    "cancelled": "Download cancelled",
+    "needUrl": "Please enter a URL",
+    "installingYtDlp": "Preparing downloader…",
+    "pickFolder": "Choose folder"
+  },
+  "lyrics": {
+    "title": "Lyrics",
+    "subtitle": "See synchronized lyrics for the song currently playing.",
+    "nowplaying": "Now playing",
+    "search": "Search for a song…",
+    "searchBtn": "Search",
+    "notfound": "No lyrics found",
+    "noSource": "No music source detected",
+    "instrumental": "This track is instrumental",
+    "loading": "Loading…",
+    "nothingPlaying": "Nothing is playing right now"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "theme.system": "System",
+    "theme.light": "Light",
+    "theme.dark": "Dark",
+    "models": "AI models",
+    "about": "About",
+    "version": "Version",
+    "outputFolder": "Default output folder"
+  },
+  "models": {
+    "htdemucs.name": "htdemucs — high quality",
+    "htdemucs.desc": "4 stems: drums, bass, other, vocals",
+    "htdemucs_fp16.name": "htdemucs — light",
+    "htdemucs_fp16.desc": "Same stems, half the download size"
+  }
+}

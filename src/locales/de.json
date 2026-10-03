@@ -1,0 +1,103 @@
+{
+  "tagline": "KI-Musik-Werkzeug",
+  "nav": {
+    "separate": "Trennen",
+    "download": "Download",
+    "lyrics": "Songtext",
+    "settings": "Einstellungen"
+  },
+  "common": {
+    "cancel": "Abbrechen",
+    "open": "Öffnen",
+    "reveal": "Im Finder zeigen",
+    "delete": "Löschen",
+    "install": "Installieren",
+    "installed": "Installiert",
+    "deleteModel": "Entfernen",
+    "installing": "Wird installiert…",
+    "downloading": "Wird heruntergeladen…",
+    "close": "Schließen",
+    "confirmDelete": "Möchtest du das wirklich löschen?",
+    "notinstalled": "nicht installiert"
+  },
+  "separate": {
+    "title": "Stem-Trennung",
+    "subtitle": "Teile jeden Song in Gesang, Drums, Bass und Sonstiges — lokal mit KI.",
+    "drop": "Audiodateien hierher ziehen",
+    "choose": "Dateien auswählen",
+    "model": "Modell",
+    "mode": "Ausgabe",
+    "mode.all": "Alle Stems (4)",
+    "mode.vocals": "Nur Gesang",
+    "mode.instrumental": "Nur Instrumental",
+    "format": "Format",
+    "output": "Ausgabeordner",
+    "choosefolder": "Ordner wählen",
+    "defaultfolder": "(Downloads)",
+    "trim": "Zuschneiden (optional)",
+    "seconds": "s",
+    "analyze": "Analyse",
+    "analyzeBtn": "BPM & Tonart erkennen",
+    "start": "Trennung starten",
+    "history": "Verlauf",
+    "processing": "Wird verarbeitet…",
+    "done": "Trennung abgeschlossen",
+    "error": "Trennung fehlgeschlagen",
+    "cancelled": "Trennung abgebrochen",
+    "noFile": "Bitte mindestens eine Audiodatei hinzufügen",
+    "analyzing": "Wird analysiert…",
+    "noModel": "Installiere zuerst ein Modell (Einstellungen → KI-Modelle)",
+    "stemsReady": "Stems bereit"
+  },
+  "stems": {
+    "drums": "Drums",
+    "bass": "Bass",
+    "other": "Sonstiges",
+    "vocals": "Gesang",
+    "instrumental": "Instrumental"
+  },
+  "download": {
+    "title": "Download",
+    "subtitle": "Audio von YouTube, SoundCloud, Bandcamp und mehr herunterladen.",
+    "url": "URL",
+    "format": "Format",
+    "output": "Speichern unter",
+    "start": "Herunterladen",
+    "done": "Download abgeschlossen",
+    "error": "Download fehlgeschlagen",
+    "cancelled": "Download abgebrochen",
+    "needUrl": "Bitte eine URL eingeben",
+    "installingYtDlp": "Downloader wird vorbereitet…",
+    "pickFolder": "Ordner wählen"
+  },
+  "lyrics": {
+    "title": "Songtext",
+    "subtitle": "Sieh synchronisierte Songtexte für den gerade laufenden Titel.",
+    "nowplaying": "Jetzt läuft",
+    "search": "Nach einem Song suchen…",
+    "searchBtn": "Suchen",
+    "notfound": "Keine Songtexte gefunden",
+    "noSource": "Keine Musikquelle erkannt",
+    "instrumental": "Dieser Titel ist instrumental",
+    "loading": "Wird geladen…",
+    "nothingPlaying": "Gerade läuft nichts"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "theme": "Design",
+    "theme.system": "System",
+    "theme.light": "Hell",
+    "theme.dark": "Dunkel",
+    "models": "KI-Modelle",
+    "about": "Über",
+    "version": "Version",
+    "outputFolder": "Standard-Ausgabeordner"
+  },
+  "models": {
+    "htdemucs.name": "htdemucs — hohe Qualität",
+    "htdemucs.desc": "4 Stems: Drums, Bass, Sonstiges, Gesang",
+    "htdemucs_fp16.name": "htdemucs — leicht",
+    "htdemucs_fp16.desc": "Dieselben Stems, halbe Downloadgröße"
+  }
+}
