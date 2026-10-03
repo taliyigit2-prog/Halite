@@ -17,8 +17,14 @@
     "installing": "Installation…",
     "downloading": "Téléchargement…",
     "close": "Fermer",
-    "confirmDelete": "Voulez-vous vraiment supprimer ceci ?",
-    "notinstalled": "non installé"
+    "confirmDelete": "Retirer cet élément de l'historique ? Les fichiers de sortie seront conservés.",
+    "notinstalled": "non installé",
+    "bundled": "Inclus",
+    "previewError": "Impossible de lire cet aperçu audio",
+    "unexpected": "Une erreur inattendue s'est produite",
+    "outputError": "Le dossier de sortie n'a pas pu être utilisé",
+    "openError": "Impossible d'ouvrir le fichier ou le dossier",
+    "audioConverterError": "Le convertisseur audio n'a pas pu être préparé"
   },
   "separate": {
     "title": "Séparation des pistes",
@@ -46,7 +52,10 @@
     "cancelled": "Séparation annulée",
     "noFile": "Ajoutez au moins un fichier audio",
     "analyzing": "Analyse…",
-    "noModel": "Installez d'abord un modèle (Réglages → Modèles d'IA)",
+    "noModel": "Le modèle d'IA inclus est introuvable",
+    "modelMissing": "Le modèle d'IA inclus est introuvable. Veuillez réinstaller Halite.",
+    "invalidTrim": "La plage de découpe est incorrecte",
+    "invalidAudio": "Le fichier audio sélectionné n'a pas pu être ouvert",
     "stemsReady": "pistes prêtes"
   },
   "stems": {
@@ -68,7 +77,13 @@
     "cancelled": "Téléchargement annulé",
     "needUrl": "Veuillez saisir une URL",
     "installingYtDlp": "Préparation du téléchargeur…",
-    "pickFolder": "Choisir un dossier"
+    "pickFolder": "Choisir un dossier",
+    "invalidUrl": "Veuillez saisir une adresse Web valide",
+    "ageRestricted": "Cette vidéo est soumise à une limite d'âge. Halite ne peut pas contourner la connexion YouTube.",
+    "authRequired": "Ce téléchargement nécessite un compte ou une authentification du navigateur",
+    "helperFailed": "Le composant de téléchargement n'a pas pu être préparé. Vérifiez votre connexion et réessayez.",
+    "outputMissing": "Le fichier téléchargé n'existe plus",
+    "jsRuntimeRequired": "Ce site nécessite un moteur JavaScript. Installez Deno ou Node.js puis réessayez."
   },
   "lyrics": {
     "title": "Paroles",
@@ -80,24 +95,33 @@
     "noSource": "Aucune source musicale détectée",
     "instrumental": "Ce morceau est instrumental",
     "loading": "Chargement…",
-    "nothingPlaying": "Rien n'est en lecture"
+    "nothingPlaying": "Rien n'est en lecture",
+    "error": "Impossible de charger les paroles"
+  },
+  "music": {
+    "major": "majeur",
+    "minor": "mineur"
   },
   "settings": {
     "title": "Réglages",
     "language": "Langue",
     "theme": "Thème",
-    "theme.system": "Système",
-    "theme.light": "Clair",
-    "theme.dark": "Sombre",
     "models": "Modèles d'IA",
     "about": "À propos",
     "version": "Version",
-    "outputFolder": "Dossier de sortie par défaut"
+    "outputFolder": "Dossier de sortie par défaut",
+    "themeSystem": "Système",
+    "themeLight": "Clair",
+    "themeDark": "Sombre"
   },
   "models": {
-    "htdemucs.name": "htdemucs — haute qualité",
-    "htdemucs.desc": "4 pistes : batterie, basse, autres, voix",
-    "htdemucs_fp16.name": "htdemucs — léger",
-    "htdemucs_fp16.desc": "Mêmes pistes, moitié du poids de téléchargement"
+    "htdemucs": {
+      "name": "htdemucs — haute qualité",
+      "desc": "4 pistes : batterie, basse, autres, voix"
+    },
+    "htdemucs_fp16": {
+      "name": "htdemucs — léger",
+      "desc": "Les mêmes 4 pistes dans un modèle inclus plus petit"
+    }
   }
 }

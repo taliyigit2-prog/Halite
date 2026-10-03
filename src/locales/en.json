@@ -17,8 +17,14 @@
     "installing": "Installing…",
     "downloading": "Downloading…",
     "close": "Close",
-    "confirmDelete": "Are you sure you want to delete this?",
-    "notinstalled": "not installed"
+    "confirmDelete": "Remove this item from history? The output files will be kept.",
+    "notinstalled": "not installed",
+    "bundled": "Included",
+    "previewError": "This audio preview could not be played",
+    "unexpected": "An unexpected error occurred",
+    "outputError": "The output folder could not be used",
+    "openError": "The file or folder could not be opened",
+    "audioConverterError": "The audio converter could not be prepared"
   },
   "separate": {
     "title": "Stem Separation",
@@ -46,7 +52,10 @@
     "cancelled": "Separation cancelled",
     "noFile": "Please add at least one audio file",
     "analyzing": "Analyzing…",
-    "noModel": "Install a model first (Settings → AI models)",
+    "noModel": "The bundled AI model could not be found",
+    "modelMissing": "The bundled AI model could not be found. Please reinstall Halite.",
+    "invalidTrim": "The trim range is invalid",
+    "invalidAudio": "The selected audio file could not be opened",
     "stemsReady": "stems ready"
   },
   "stems": {
@@ -68,7 +77,13 @@
     "cancelled": "Download cancelled",
     "needUrl": "Please enter a URL",
     "installingYtDlp": "Preparing downloader…",
-    "pickFolder": "Choose folder"
+    "pickFolder": "Choose folder",
+    "invalidUrl": "Please enter a valid web address",
+    "ageRestricted": "This video is age-restricted. Halite cannot bypass YouTube sign-in requirements.",
+    "authRequired": "This download requires an account or browser authentication",
+    "helperFailed": "The download component could not be prepared. Check your connection and try again.",
+    "outputMissing": "The downloaded file no longer exists",
+    "jsRuntimeRequired": "This site requires a JavaScript runtime. Install Deno or Node.js and try again."
   },
   "lyrics": {
     "title": "Lyrics",
@@ -80,24 +95,33 @@
     "noSource": "No music source detected",
     "instrumental": "This track is instrumental",
     "loading": "Loading…",
-    "nothingPlaying": "Nothing is playing right now"
+    "nothingPlaying": "Nothing is playing right now",
+    "error": "Lyrics could not be loaded"
+  },
+  "music": {
+    "major": "major",
+    "minor": "minor"
   },
   "settings": {
     "title": "Settings",
     "language": "Language",
     "theme": "Theme",
-    "theme.system": "System",
-    "theme.light": "Light",
-    "theme.dark": "Dark",
     "models": "AI models",
     "about": "About",
     "version": "Version",
-    "outputFolder": "Default output folder"
+    "outputFolder": "Default output folder",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark"
   },
   "models": {
-    "htdemucs.name": "htdemucs — high quality",
-    "htdemucs.desc": "4 stems: drums, bass, other, vocals",
-    "htdemucs_fp16.name": "htdemucs — light",
-    "htdemucs_fp16.desc": "Same stems, half the download size"
+    "htdemucs": {
+      "name": "htdemucs — high quality",
+      "desc": "4 stems: drums, bass, other, vocals"
+    },
+    "htdemucs_fp16": {
+      "name": "htdemucs — light",
+      "desc": "The same 4 stems in a smaller bundled model"
+    }
   }
 }

@@ -17,8 +17,14 @@
     "installing": "Yükleniyor…",
     "downloading": "İndiriliyor…",
     "close": "Kapat",
-    "confirmDelete": "Bunu silmek istediğine emin misin?",
-    "notinstalled": "yüklü değil"
+    "confirmDelete": "Bu kayıt geçmişten kaldırılsın mı? Çıktı dosyaları korunacak.",
+    "notinstalled": "yüklü değil",
+    "bundled": "Dahil",
+    "previewError": "Bu ses önizlemesi oynatılamadı",
+    "unexpected": "Beklenmeyen bir hata oluştu",
+    "outputError": "Çıktı klasörü kullanılamadı",
+    "openError": "Dosya veya klasör açılamadı",
+    "audioConverterError": "Ses dönüştürücü hazırlanamadı"
   },
   "separate": {
     "title": "Stem Ayrıştırma",
@@ -46,7 +52,10 @@
     "cancelled": "Ayrıştırma iptal edildi",
     "noFile": "Lütfen en az bir ses dosyası ekleyin",
     "analyzing": "Analiz ediliyor…",
-    "noModel": "Önce bir model yükleyin (Ayarlar → Yapay zekâ modelleri)",
+    "noModel": "Dahil edilen yapay zekâ modeli bulunamadı",
+    "modelMissing": "Dahil edilen yapay zekâ modeli bulunamadı. Lütfen Halite'ı yeniden yükleyin.",
+    "invalidTrim": "Kırpma aralığı geçersiz",
+    "invalidAudio": "Seçilen ses dosyası açılamadı",
     "stemsReady": "katman hazır"
   },
   "stems": {
@@ -68,7 +77,13 @@
     "cancelled": "İndirme iptal edildi",
     "needUrl": "Lütfen bir URL girin",
     "installingYtDlp": "İndirici hazırlanıyor…",
-    "pickFolder": "Klasör seç"
+    "pickFolder": "Klasör seç",
+    "invalidUrl": "Lütfen geçerli bir internet adresi girin",
+    "ageRestricted": "Bu video yaş kısıtlamalı. Halite, YouTube'un oturum açma zorunluluğunu aşamaz.",
+    "authRequired": "Bu indirme için hesap veya tarayıcı kimlik doğrulaması gerekiyor",
+    "helperFailed": "İndirme bileşeni hazırlanamadı. Bağlantınızı kontrol edip yeniden deneyin.",
+    "outputMissing": "İndirilen dosya artık mevcut değil",
+    "jsRuntimeRequired": "Bu site bir JavaScript çalışma ortamı gerektiriyor. Deno veya Node.js kurup yeniden deneyin."
   },
   "lyrics": {
     "title": "Şarkı Sözü",
@@ -80,24 +95,33 @@
     "noSource": "Müzik kaynağı algılanamadı",
     "instrumental": "Bu parça enstrümantal",
     "loading": "Yükleniyor…",
-    "nothingPlaying": "Şu an bir şey çalmıyor"
+    "nothingPlaying": "Şu an bir şey çalmıyor",
+    "error": "Şarkı sözleri yüklenemedi"
+  },
+  "music": {
+    "major": "majör",
+    "minor": "minör"
   },
   "settings": {
     "title": "Ayarlar",
     "language": "Dil",
     "theme": "Tema",
-    "theme.system": "Sistem",
-    "theme.light": "Açık",
-    "theme.dark": "Koyu",
     "models": "Yapay zekâ modelleri",
     "about": "Hakkında",
     "version": "Sürüm",
-    "outputFolder": "Varsayılan çıktı klasörü"
+    "outputFolder": "Varsayılan çıktı klasörü",
+    "themeSystem": "Sistem",
+    "themeLight": "Açık",
+    "themeDark": "Koyu"
   },
   "models": {
-    "htdemucs.name": "htdemucs — yüksek kalite",
-    "htdemucs.desc": "4 katman: davul, bas, diğer, vokal",
-    "htdemucs_fp16.name": "htdemucs — hafif",
-    "htdemucs_fp16.desc": "Aynı katmanlar, yarı indirme boyutu"
+    "htdemucs": {
+      "name": "htdemucs — yüksek kalite",
+      "desc": "4 katman: davul, bas, diğer, vokal"
+    },
+    "htdemucs_fp16": {
+      "name": "htdemucs — hafif",
+      "desc": "Daha küçük boyutlu dahilî modelle aynı 4 katman"
+    }
   }
 }

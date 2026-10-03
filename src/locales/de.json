@@ -17,8 +17,14 @@
     "installing": "Wird installiert…",
     "downloading": "Wird heruntergeladen…",
     "close": "Schließen",
-    "confirmDelete": "Möchtest du das wirklich löschen?",
-    "notinstalled": "nicht installiert"
+    "confirmDelete": "Diesen Eintrag aus dem Verlauf entfernen? Die Ausgabedateien bleiben erhalten.",
+    "notinstalled": "nicht installiert",
+    "bundled": "Enthalten",
+    "previewError": "Diese Audiovorschau konnte nicht abgespielt werden",
+    "unexpected": "Ein unerwarteter Fehler ist aufgetreten",
+    "outputError": "Der Ausgabeordner konnte nicht verwendet werden",
+    "openError": "Die Datei oder der Ordner konnte nicht geöffnet werden",
+    "audioConverterError": "Der Audiokonverter konnte nicht vorbereitet werden"
   },
   "separate": {
     "title": "Stem-Trennung",
@@ -46,7 +52,10 @@
     "cancelled": "Trennung abgebrochen",
     "noFile": "Bitte mindestens eine Audiodatei hinzufügen",
     "analyzing": "Wird analysiert…",
-    "noModel": "Installiere zuerst ein Modell (Einstellungen → KI-Modelle)",
+    "noModel": "Das enthaltene KI-Modell wurde nicht gefunden",
+    "modelMissing": "Das enthaltene KI-Modell wurde nicht gefunden. Bitte Halite neu installieren.",
+    "invalidTrim": "Der Zuschnittbereich ist ungültig",
+    "invalidAudio": "Die gewählte Audiodatei konnte nicht geöffnet werden",
     "stemsReady": "Stems bereit"
   },
   "stems": {
@@ -68,7 +77,13 @@
     "cancelled": "Download abgebrochen",
     "needUrl": "Bitte eine URL eingeben",
     "installingYtDlp": "Downloader wird vorbereitet…",
-    "pickFolder": "Ordner wählen"
+    "pickFolder": "Ordner wählen",
+    "invalidUrl": "Bitte eine gültige Webadresse eingeben",
+    "ageRestricted": "Dieses Video ist altersbeschränkt. Halite kann die YouTube-Anmeldung nicht umgehen.",
+    "authRequired": "Dieser Download erfordert ein Konto oder eine Browser-Anmeldung",
+    "helperFailed": "Die Download-Komponente konnte nicht vorbereitet werden. Verbindung prüfen und erneut versuchen.",
+    "outputMissing": "Die heruntergeladene Datei ist nicht mehr vorhanden",
+    "jsRuntimeRequired": "Diese Website benötigt eine JavaScript-Laufzeit. Installiere Deno oder Node.js und versuche es erneut."
   },
   "lyrics": {
     "title": "Songtext",
@@ -80,24 +95,33 @@
     "noSource": "Keine Musikquelle erkannt",
     "instrumental": "Dieser Titel ist instrumental",
     "loading": "Wird geladen…",
-    "nothingPlaying": "Gerade läuft nichts"
+    "nothingPlaying": "Gerade läuft nichts",
+    "error": "Songtexte konnten nicht geladen werden"
+  },
+  "music": {
+    "major": "Dur",
+    "minor": "Moll"
   },
   "settings": {
     "title": "Einstellungen",
     "language": "Sprache",
     "theme": "Design",
-    "theme.system": "System",
-    "theme.light": "Hell",
-    "theme.dark": "Dunkel",
     "models": "KI-Modelle",
     "about": "Über",
     "version": "Version",
-    "outputFolder": "Standard-Ausgabeordner"
+    "outputFolder": "Standard-Ausgabeordner",
+    "themeSystem": "System",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel"
   },
   "models": {
-    "htdemucs.name": "htdemucs — hohe Qualität",
-    "htdemucs.desc": "4 Stems: Drums, Bass, Sonstiges, Gesang",
-    "htdemucs_fp16.name": "htdemucs — leicht",
-    "htdemucs_fp16.desc": "Dieselben Stems, halbe Downloadgröße"
+    "htdemucs": {
+      "name": "htdemucs — hohe Qualität",
+      "desc": "4 Stems: Drums, Bass, Sonstiges, Gesang"
+    },
+    "htdemucs_fp16": {
+      "name": "htdemucs — leicht",
+      "desc": "Dieselben 4 Stems in einem kleineren enthaltenen Modell"
+    }
   }
 }

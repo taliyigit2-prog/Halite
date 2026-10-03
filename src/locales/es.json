@@ -17,8 +17,14 @@
     "installing": "Instalando…",
     "downloading": "Descargando…",
     "close": "Cerrar",
-    "confirmDelete": "¿Seguro que quieres eliminar esto?",
-    "notinstalled": "no instalado"
+    "confirmDelete": "¿Quitar este elemento del historial? Los archivos de salida se conservarán.",
+    "notinstalled": "no instalado",
+    "bundled": "Incluido",
+    "previewError": "No se pudo reproducir esta vista previa de audio",
+    "unexpected": "Se produjo un error inesperado",
+    "outputError": "No se pudo usar la carpeta de salida",
+    "openError": "No se pudo abrir el archivo o la carpeta",
+    "audioConverterError": "No se pudo preparar el conversor de audio"
   },
   "separate": {
     "title": "Separación de pistas",
@@ -46,7 +52,10 @@
     "cancelled": "Separación cancelada",
     "noFile": "Añade al menos un archivo de audio",
     "analyzing": "Analizando…",
-    "noModel": "Instala primero un modelo (Ajustes → Modelos de IA)",
+    "noModel": "No se encontró el modelo de IA incluido",
+    "modelMissing": "No se encontró el modelo de IA incluido. Vuelve a instalar Halite.",
+    "invalidTrim": "El intervalo de recorte no es válido",
+    "invalidAudio": "No se pudo abrir el archivo de audio seleccionado",
     "stemsReady": "pistas listas"
   },
   "stems": {
@@ -68,7 +77,13 @@
     "cancelled": "Descarga cancelada",
     "needUrl": "Introduce una URL",
     "installingYtDlp": "Preparando el descargador…",
-    "pickFolder": "Elegir carpeta"
+    "pickFolder": "Elegir carpeta",
+    "invalidUrl": "Introduce una dirección web válida",
+    "ageRestricted": "Este vídeo tiene restricción de edad. Halite no puede eludir el inicio de sesión de YouTube.",
+    "authRequired": "Esta descarga requiere una cuenta o autenticación del navegador",
+    "helperFailed": "No se pudo preparar el componente de descarga. Comprueba la conexión e inténtalo de nuevo.",
+    "outputMissing": "El archivo descargado ya no existe",
+    "jsRuntimeRequired": "Este sitio requiere un entorno de JavaScript. Instala Deno o Node.js e inténtalo de nuevo."
   },
   "lyrics": {
     "title": "Letras",
@@ -80,24 +95,33 @@
     "noSource": "No se detectó ninguna fuente de música",
     "instrumental": "Esta pista es instrumental",
     "loading": "Cargando…",
-    "nothingPlaying": "No suena nada ahora mismo"
+    "nothingPlaying": "No suena nada ahora mismo",
+    "error": "No se pudieron cargar las letras"
+  },
+  "music": {
+    "major": "mayor",
+    "minor": "menor"
   },
   "settings": {
     "title": "Ajustes",
     "language": "Idioma",
     "theme": "Tema",
-    "theme.system": "Sistema",
-    "theme.light": "Claro",
-    "theme.dark": "Oscuro",
     "models": "Modelos de IA",
     "about": "Acerca de",
     "version": "Versión",
-    "outputFolder": "Carpeta de salida predeterminada"
+    "outputFolder": "Carpeta de salida predeterminada",
+    "themeSystem": "Sistema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro"
   },
   "models": {
-    "htdemucs.name": "htdemucs — alta calidad",
-    "htdemucs.desc": "4 pistas: batería, bajo, otros, voz",
-    "htdemucs_fp16.name": "htdemucs — ligero",
-    "htdemucs_fp16.desc": "Mismas pistas, la mitad de tamaño de descarga"
+    "htdemucs": {
+      "name": "htdemucs — alta calidad",
+      "desc": "4 pistas: batería, bajo, otros, voz"
+    },
+    "htdemucs_fp16": {
+      "name": "htdemucs — ligero",
+      "desc": "Las mismas 4 pistas en un modelo incluido más pequeño"
+    }
   }
 }

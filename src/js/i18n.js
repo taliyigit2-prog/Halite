@@ -1,25 +1,24 @@
-// Internationalization layer. Loads JSON locale files and applies them to
-// elements carrying `data-i18n` (textContent) and `data-i18n-ph` (placeholder)
-// attributes. Falls back to English for any missing key.
+// Internationalization layer. Translations are embedded in `locales.js`
+// (window.HALITE_LOCALES) so they load without runtime fetch(). Applies text to
+// elements carrying `data-i18n` (textContent) and `data-i18n-ph` (placeholder).
+// Falls back to English for any missing key.
 
 const SUPPORTED = ["en", "tr", "de", "es", "fr", "ru", "ja"];
-const cache = {};
+const LOCALES = (typeof window !== "undefined" && window.HALITE_LOCALES) || {};
 
 function getByPath(obj, path) {
-  return path.split(".").reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
-}
-
-async function load(lang) {
-  if (cache[lang]) return cache[lang];
-  try {
-    const res = await fetch(`./locales/${lang}.json`);
-    const data = await res.json();
-    cache[lang] = data;
-    return data;
-  } catch {
-    cache[lang] = {};
-    return {};
+  if (obj == null) return undefined;
+  const parts = path.split(".");
+  let current = obj;
+  for (let index = 0; index < parts.length; index += 1) {
+    if (current == null || typeof current !== "object") return undefined;
+    // Some locale sections intentionally use leaf keys such as "mode.all".
+    const remaining = parts.slice(index).join(".");
+    if (Object.prototype.hasOwnProperty.call(current, remaining)) return current[remaining];
+    if (!Object.prototype.hasOwnProperty.call(current, parts[index])) return undefined;
+    current = current[parts[index]];
   }
+  return current;
 }
 
 export const i18n = {
@@ -27,15 +26,15 @@ export const i18n = {
   data: {},
   fallback: {},
 
-  async init(lang) {
-    this.fallback = await load("en");
-    await this.setLanguage(lang || "en");
+  init(lang) {
+    this.fallback = LOCALES["en"] || {};
+    this.setLanguage(lang || "en");
   },
 
-  async setLanguage(lang) {
+  setLanguage(lang) {
     if (!SUPPORTED.includes(lang)) lang = "en";
     this.lang = lang;
-    this.data = lang === "en" ? this.fallback : await load(lang);
+    this.data = LOCALES[lang] || this.fallback;
     document.documentElement.lang = lang;
     this.apply();
   },

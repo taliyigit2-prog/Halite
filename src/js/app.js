@@ -5,7 +5,6 @@ import { theme } from "./theme.js";
 const t = (k, v) => i18n.t(k, v);
 const $ = (sel) => document.querySelector(sel);
 
-const STEM_ORDER = ["drums", "bass", "other", "vocals"];
 const SUPPORTED_LANGS = ["en", "tr", "de", "es", "fr", "ru", "ja"];
 
 // Resolve the UI language: an explicit choice wins, otherwise follow the OS.
@@ -30,7 +29,10 @@ const state = {
   taskId: null,
   dlTaskId: null,
   player: null,
+  lyricsSync: null,
 };
+
+const taskWaiters = new Map();
 
 // ---------- Toast ----------
 let toastTimer = null;
@@ -44,6 +46,7 @@ function toast(msg, type = "") {
 
 // ---------- Init ----------
 async function init() {
+  document.documentElement.dataset.platform = platform();
   try {
     state.settings = (await invoke("get_settings")) || state.settings;
   } catch (e) {
@@ -58,6 +61,7 @@ async function init() {
   theme.setMode(state.settings.theme);
   theme.listen();
 
+  await wireBackendEvents();
   await refreshModels();
   await refreshHistory();
   bindUI();
@@ -85,7 +89,7 @@ async function refreshModels() {
   for (const m of state.models) {
     const opt = document.createElement("option");
     opt.value = m.id;
-    opt.textContent = i18n.t(`models.${m.id}.name`) + (m.installed ? "" : ` — ${t("common.notinstalled")}`);
+    opt.textContent = i18n.t(`models.${m.id}.name`);
     sel.appendChild(opt);
   }
   if (current && state.models.some((m) => m.id === current)) sel.value = current;
@@ -115,65 +119,15 @@ function renderModelsList() {
     size.className = "size";
     size.textContent = formatBytes(m.size_bytes);
 
-    const btn = document.createElement("button");
-    btn.className = "btn " + (m.installed ? "btn-ghost" : "btn-primary");
-    btn.textContent = m.installed ? t("common.deleteModel") : t("common.install");
-    btn.addEventListener("click", () => (m.installed ? removeModel(m) : installModel(m)));
+    const badge = document.createElement("span");
+    badge.className = "chip";
+    badge.textContent = t("common.bundled");
 
     item.appendChild(info);
     item.appendChild(size);
-    item.appendChild(btn);
+    item.appendChild(badge);
     list.appendChild(item);
   }
-}
-
-function installModel(model) {
-  const list = $("#models-list");
-  const item = list.querySelectorAll(".model-item")[state.models.indexOf(model)];
-  const btn = item && item.querySelector(".btn");
-  if (btn) btn.textContent = t("common.installing");
-  invoke("install_model", { modelId: model.id })
-    .then(() => {})
-    .catch(() => {});
-}
-
-function removeModel(model) {
-  invoke("delete_model", { modelId: model.id })
-    .then(() => {
-      toast(t("common.delete") + " ✓", "ok");
-      refreshModels();
-    })
-    .catch((e) => toast(String(e), "error"));
-}
-
-async function ensureModel(modelId) {
-  const models = await invoke("get_models");
-  const m = models.find((x) => x.id === modelId);
-  if (m && m.installed) return;
-  await invoke("install_model", { modelId });
-  await new Promise((resolve, reject) => {
-    let settled = false;
-    let un1 = null;
-    let un2 = null;
-    const cleanup = () => {
-      if (un1) un1();
-      if (un2) un2();
-    };
-    listen("model://done", (p) => {
-      if (p.model_id === modelId && !settled) {
-        settled = true;
-        cleanup();
-        resolve();
-      }
-    }).then((u) => (un1 = u));
-    listen("model://error", (p) => {
-      if (p.task_id === modelId && !settled) {
-        settled = true;
-        cleanup();
-        reject(new Error(p.message));
-      }
-    }).then((u) => (un2 = u));
-  });
 }
 
 // ---------- History ----------
@@ -217,7 +171,7 @@ function renderJob(job) {
 
   const actions = document.createElement("div");
   actions.className = "actions";
-  actions.appendChild(iconBtn("reveal", t("common.reveal"), () => invoke("reveal_path", { path: job.stems[0]?.path || job.output_dir })));
+  actions.appendChild(iconBtn("reveal", t("common.reveal"), () => runPathAction("reveal_path", job.stems[0]?.path || job.output_dir)));
   actions.appendChild(iconBtn("delete", t("common.delete"), () => deleteJob(job.id), true));
 
   item.appendChild(info);
@@ -244,23 +198,40 @@ const ICONS = {
 };
 
 function deleteJob(id) {
+  if (!window.confirm(t("common.confirmDelete"))) return;
   invoke("delete_job", { id })
     .then(() => refreshHistory())
-    .catch((e) => toast(String(e), "error"));
+    .catch((e) => toast(errorText(e, "common.unexpected"), "error"));
 }
 
 // ---------- Audio preview ----------
-function togglePreview(path, chip) {
-  if (!state.player) state.player = new Audio();
+async function togglePreview(path, chip) {
+  if (!state.player) {
+    state.player = new Audio();
+    state.player.addEventListener("ended", clearActivePreview);
+  }
   if (state.player.src === convertFileSrc(path) && !state.player.paused) {
     state.player.pause();
     chip.classList.remove("active");
     return;
   }
   document.querySelectorAll(".stem-chip.active").forEach((c) => c.classList.remove("active"));
+  try {
+    await invoke("allow_audio_preview", { path });
+  } catch (error) {
+    toast(errorText(error, "common.previewError"), "error");
+    return;
+  }
   state.player.src = convertFileSrc(path);
-  state.player.play().catch(() => {});
+  state.player.play().catch(() => {
+    clearActivePreview();
+    toast(t("common.previewError"), "error");
+  });
   chip.classList.add("active");
+}
+
+function clearActivePreview() {
+  document.querySelectorAll(".stem-chip.active").forEach((chip) => chip.classList.remove("active"));
 }
 
 // ---------- Output dirs ----------
@@ -311,18 +282,21 @@ function bindUI() {
   $("#sel-language").addEventListener("change", (e) => saveSettings({ language: e.target.value }));
   $("#sel-theme").addEventListener("change", (e) => saveSettings({ theme: e.target.value }));
 
-  // Backend events
-  wireBackendEvents();
 }
 
 function switchTab(tab) {
   document.querySelectorAll(".nav-item[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
   document.querySelectorAll(".tab").forEach((s) => s.classList.toggle("active", s.id === `tab-${tab}`));
+  if (tab !== "lyrics") stopLyricsSync();
 }
 
 async function pickFiles() {
-  const paths = await invoke("pick_audio_files");
-  if (paths && paths.length) addFiles(paths);
+  try {
+    const paths = await invoke("pick_audio_files");
+    if (paths && paths.length) addFiles(paths);
+  } catch (error) {
+    toast(errorText(error, "common.unexpected"), "error");
+  }
 }
 
 function bindDropzone() {
@@ -340,7 +314,7 @@ function bindDropzone() {
 
 function addFiles(paths) {
   for (const p of paths) {
-    const name = p.split("/").pop();
+    const name = p.split(/[\\/]/).pop();
     if (!state.files.find((f) => f.path === p)) state.files.push({ name, path: p });
   }
   renderFiles();
@@ -368,15 +342,17 @@ function renderFiles() {
 }
 
 async function pickFolder(selector) {
-  const dir = await invoke("pick_folder");
-  if (dir) {
-    $(selector).textContent = dir;
-    state.settings.output_dir = dir;
-    $("#output-dir").textContent = dir;
-    $("#dl-output-dir").textContent = dir;
-    try {
+  try {
+    const dir = await invoke("pick_folder");
+    if (dir) {
+      $(selector).textContent = dir;
+      state.settings.output_dir = dir;
+      $("#output-dir").textContent = dir;
+      $("#dl-output-dir").textContent = dir;
       await invoke("set_settings", { settings: state.settings });
-    } catch {}
+    }
+  } catch (error) {
+    toast(errorText(error, "common.unexpected"), "error");
   }
 }
 
@@ -392,88 +368,89 @@ async function startSeparation() {
   if (!state.files.length) return toast(t("separate.noFile"), "error");
 
   const modelId = $("#sel-model").value;
+  if (!state.models.some((model) => model.id === modelId && model.installed)) {
+    return toast(t("separate.modelMissing"), "error");
+  }
   const mode = $("#sel-mode").value;
   const format = $("#sel-format").value;
   const startSec = parseFloat($("#trim-start").value) || 0;
   const endSecRaw = parseFloat($("#trim-end").value);
+  if (startSec < 0 || (!isNaN(endSecRaw) && endSecRaw <= startSec)) {
+    return toast(t("separate.invalidTrim"), "error");
+  }
 
   $("#btn-separate").disabled = true;
   $("#btn-cancel").classList.remove("hidden");
   $("#progress-wrap").classList.remove("hidden");
   setProgress(0);
 
-  // Auto-install model if needed.
-  try {
-    await ensureModel(modelId);
-    await refreshModels();
-  } catch (e) {
-    toast(String(e), "error");
-    resetSeparationUI();
-    return;
-  }
-
   // Build the job(s). For simplicity process files sequentially.
   try {
     for (const f of state.files) {
-      state.taskId = await invoke("separate", {
-        options: {
-          sourcePath: f.path,
-          modelId,
-          outputDir: selectedOutputDir(),
-          format,
-          mode,
-          startSec: startSec || null,
-          endSec: isNaN(endSecRaw) ? null : endSecRaw,
-          useCoreml: true,
-        },
-      }).then((r) => r.task_id);
+      setProgress(0);
+      const taskId = crypto.randomUUID();
+      state.taskId = taskId;
+      const completion = waitForTask("separation", taskId);
+      try {
+        await invoke("separate", {
+          taskId,
+          options: {
+            sourcePath: f.path,
+            modelId,
+            outputDir: selectedOutputDir(),
+            format,
+            mode,
+            startSec: startSec || null,
+            endSec: isNaN(endSecRaw) ? null : endSecRaw,
+            useCoreml: true,
+          },
+        });
+      } catch (error) {
+        dropTaskWaiter("separation", taskId);
+        throw error;
+      }
 
-      await waitForSeparation(state.taskId, f.name, mode, modelId);
+      const outcome = await completion;
+      if (outcome.status === "cancelled") {
+        toast(t("separate.cancelled"));
+        return;
+      }
+      if (outcome.status === "error") {
+        throw new Error(outcome.payload.message);
+      }
     }
-  } catch (e) {
-    /* handled in waitForSeparation */
+    toast(t("separate.done"), "ok");
+    await refreshHistory();
+  } catch (error) {
+    toast(operationError("separate.error", error), "error");
+  } finally {
+    resetSeparationUI();
   }
 }
 
-function waitForSeparation(taskId, name, mode, modelId) {
-  return new Promise(async (resolve) => {
-    const unlisteners = [];
-    const cleanup = () => unlisteners.forEach((u) => u && u());
-    const on = (event, handler) => listen(event, handler).then((u) => unlisteners.push(u));
-
-    await on("separation://progress", (p) => {
-      if (p.task_id === taskId) setProgress(p.pct, t("separate.processing") + " " + name);
-    });
-    await on("separation://done", (p) => {
-      if (p.task_id === taskId) {
-        cleanup();
-        toast(t("separate.done"), "ok");
-        resetSeparationUI();
-        refreshHistory();
-        resolve();
-      }
-    });
-    await on("separation://error", (p) => {
-      if (p.task_id === taskId) {
-        cleanup();
-        toast(t("separate.error") + ": " + p.message, "error");
-        resetSeparationUI();
-        resolve();
-      }
-    });
-    await on("separation://cancelled", (p) => {
-      if (p.task_id === taskId) {
-        cleanup();
-        toast(t("separate.cancelled"), "");
-        resetSeparationUI();
-        resolve();
-      }
-    });
+function waitForTask(kind, taskId) {
+  return new Promise((resolve) => {
+    taskWaiters.set(`${kind}:${taskId}`, resolve);
   });
 }
 
+function settleTask(kind, payload, status) {
+  const key = `${kind}:${payload.task_id}`;
+  const resolve = taskWaiters.get(key);
+  if (!resolve) return;
+  taskWaiters.delete(key);
+  resolve({ status, payload });
+}
+
+function dropTaskWaiter(kind, taskId) {
+  taskWaiters.delete(`${kind}:${taskId}`);
+}
+
 function cancelSeparation() {
-  if (state.taskId) invoke("cancel_separation", { taskId: state.taskId });
+  if (state.taskId) {
+    invoke("cancel_separation", { taskId: state.taskId })
+      .catch((error) => toast(errorText(error, "common.unexpected"), "error"));
+  }
 }
 
 function resetSeparationUI() {
@@ -497,10 +474,13 @@ async function analyzeFirstFile() {
   result.textContent = t("separate.analyzing");
   try {
     const a = await invoke("analyze", { path: state.files[0].path });
-    result.textContent = a.bpm > 0 ? `${a.bpm} BPM · ${a.key}${a.key_camelot ? " · " + a.key_camelot : ""}` : a.key;
+    const key = a.key_tonic && a.key_mode
+      ? `${a.key_tonic} ${t(`music.${a.key_mode}`)}`
+      : a.key;
+    result.textContent = a.bpm > 0 ? `${a.bpm} BPM · ${key}${a.key_camelot ? " · " + a.key_camelot : ""}` : key;
   } catch (e) {
     result.textContent = "";
-    toast(String(e), "error");
+    toast(errorText(e, "common.unexpected"), "error");
   }
 }
 
@@ -521,39 +501,29 @@ async function startDownload() {
   setDlProgress(0);
 
   try {
-    const r = await invoke("download", { url, outputDir, format });
-    state.dlTaskId = r.task_id;
-    waitForDownload(r.task_id);
+    const taskId = crypto.randomUUID();
+    state.dlTaskId = taskId;
+    const completion = waitForTask("download", taskId);
+    try {
+      await invoke("download", { taskId, url, outputDir, format });
+    } catch (error) {
+      dropTaskWaiter("download", taskId);
+      throw error;
+    }
+    const outcome = await completion;
+    if (outcome.status === "cancelled") {
+      toast(t("download.cancelled"));
+    } else if (outcome.status === "error") {
+      toast(operationError("download.error", outcome.payload.message), "error");
+    } else {
+      toast(t("download.done"), "ok");
+      appendDlResult(outcome.payload);
+    }
   } catch (e) {
-    toast(String(e), "error");
+    toast(operationError("download.error", e), "error");
+  } finally {
     resetDownloadUI();
   }
-}
-
-function waitForDownload(taskId) {
-  const unlisteners = [];
-  const cleanup = () => unlisteners.forEach((u) => u && u());
-  const on = (event, handler) => listen(event, handler).then((u) => unlisteners.push(u));
-
-  on("download://progress", (p) => {
-    if (p.task_id === taskId) setDlProgress(p.pct);
-  });
-  on("download://done", (p) => {
-    cleanup();
-    toast(t("download.done"), "ok");
-    appendDlResult(p);
-    resetDownloadUI();
-  });
-  on("download://error", (p) => {
-    cleanup();
-    toast(t("download.error") + ": " + p.message, "error");
-    resetDownloadUI();
-  });
-  on("download://cancelled", (p) => {
-    cleanup();
-    toast(t("download.cancelled"), "");
-    resetDownloadUI();
-  });
 }
 
 function appendDlResult(p) {
@@ -572,15 +542,18 @@ function appendDlResult(p) {
   info.appendChild(meta);
   const actions = document.createElement("div");
   actions.className = "actions";
-  actions.appendChild(iconBtn("reveal", t("common.reveal"), () => invoke("reveal_path", { path: p.path })));
-  actions.appendChild(iconBtn("open", t("common.open"), () => invoke("open_path", { path: p.path })));
+  actions.appendChild(iconBtn("reveal", t("common.reveal"), () => runPathAction("reveal_path", p.path)));
+  actions.appendChild(iconBtn("open", t("common.open"), () => runPathAction("open_path", p.path)));
   item.appendChild(info);
   item.appendChild(actions);
   wrap.prepend(item);
 }
 
 function cancelDownload() {
-  if (state.dlTaskId) invoke("cancel_download", { taskId: state.dlTaskId });
+  if (state.dlTaskId) {
+    invoke("cancel_download", { taskId: state.dlTaskId })
+      .catch((error) => toast(errorText(error, "common.unexpected"), "error"));
+  }
 }
 
 function resetDownloadUI() {
@@ -599,46 +572,65 @@ function setDlProgress(pct) {
 
 // ---------- Lyrics ----------
 async function lyricsNowPlaying() {
+  stopLyricsSync();
+  const results = $("#lyrics-results");
+  results.innerHTML = `<span class="muted">${t("lyrics.loading")}</span>`;
   let np;
   try {
     np = await invoke("get_now_playing");
-  } catch {
-    np = null;
+  } catch (error) {
+    results.innerHTML = "";
+    toast(errorText(error, "lyrics.error"), "error");
+    return;
   }
   const box = $("#lyrics-nowplaying");
   if (!np) {
     box.classList.remove("hidden");
     box.innerHTML = `<span class="muted">${t("lyrics.nothingPlaying")}</span>`;
+    results.innerHTML = "";
     return;
   }
   box.classList.remove("hidden");
   box.innerHTML = `
-    <div class="artwork">${(np.track || "♪").charAt(0).toUpperCase()}</div>
+    <div class="artwork">${escapeHtml((np.track || "♪").charAt(0).toUpperCase())}</div>
     <div>
       <div class="np-title">${escapeHtml(np.track)}</div>
       <div class="np-artist">${escapeHtml(np.artist)}</div>
     </div>`;
-  const lyrics = await invoke("get_lyrics", {
-    track: np.track,
-    artist: np.artist,
-    album: np.album,
-    duration: np.duration,
-  });
-  renderLyricsResult($("#lyrics-results"), lyrics, np.track, np.artist);
+  try {
+    const lyrics = await invoke("get_lyrics", {
+      track: np.track,
+      artist: np.artist,
+      album: np.album,
+      duration: np.duration,
+    });
+    const rendered = renderLyricsResult(results, lyrics, np.track, np.artist);
+    if (lyrics?.synced_lyrics && rendered) startLyricsSync(np, rendered);
+  } catch (error) {
+    results.innerHTML = `<span class="muted">${t("lyrics.error")}</span>`;
+    toast(errorText(error, "lyrics.error"), "error");
+  }
 }
 
 async function lyricsSearch() {
+  stopLyricsSync();
   const q = $("#lyrics-search").value.trim();
   if (!q) return;
-  const results = await invoke("search_lyrics", { query: q });
   const wrap = $("#lyrics-results");
-  wrap.innerHTML = "";
-  if (!results.length) {
-    wrap.innerHTML = `<span class="muted">${t("lyrics.notfound")}</span>`;
-    return;
-  }
-  for (const r of results.slice(0, 6)) {
-    renderLyricsResult(wrap, r, r.track_name, r.artist_name, true);
+  wrap.innerHTML = `<span class="muted">${t("lyrics.loading")}</span>`;
+  try {
+    const results = await invoke("search_lyrics", { query: q });
+    wrap.innerHTML = "";
+    if (!results.length) {
+      wrap.innerHTML = `<span class="muted">${t("lyrics.notfound")}</span>`;
+      return;
+    }
+    for (const r of results.slice(0, 6)) {
+      renderLyricsResult(wrap, r, r.track_name, r.artist_name, true);
+    }
+  } catch (error) {
+    wrap.innerHTML = `<span class="muted">${t("lyrics.error")}</span>`;
+    toast(errorText(error, "lyrics.error"), "error");
   }
 }
 
@@ -646,7 +638,7 @@ function renderLyricsResult(container, lyrics, track, artist, append = false) {
   if (!append) container.innerHTML = "";
   if (!lyrics) {
     if (!append) container.innerHTML = `<span class="muted">${t("lyrics.notfound")}</span>`;
-    return;
+    return null;
   }
 
   const card = document.createElement("div");
@@ -672,6 +664,7 @@ function renderLyricsResult(container, lyrics, track, artist, append = false) {
       const el = document.createElement("div");
       el.className = "lyric-line";
       el.textContent = line.text;
+      if (line.time != null) el.dataset.time = String(line.time);
       body.appendChild(el);
     }
   } else if (lyrics.plain_lyrics) {
@@ -681,19 +674,91 @@ function renderLyricsResult(container, lyrics, track, artist, append = false) {
   }
   card.appendChild(body);
   container.appendChild(card);
+  return body;
 }
 
 function parseLrc(synced) {
   const lines = [];
+  const offsetMatch = synced.match(/^\[offset:([+-]?\d+)\]$/im);
+  const offset = offsetMatch ? Number(offsetMatch[1]) / 1000 : 0;
+  const timestamp = /\[(\d{1,3}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
   for (const raw of synced.split("\n")) {
-    const m = raw.match(/\[(\d+):(\d+(?:[.,]\d+)?)\](.*)/);
-    if (m) {
-      lines.push({ time: parseInt(m[1], 10) * 60 + parseFloat(m[2].replace(",", ".")), text: m[3].trim() });
-    } else if (raw.trim()) {
+    const matches = Array.from(raw.matchAll(timestamp));
+    if (matches.length) {
+      const text = raw.replace(timestamp, "").trim();
+      if (!text) continue;
+      for (const match of matches) {
+        const time = parseInt(match[1], 10) * 60 + parseFloat(match[2].replace(",", ".")) + offset;
+        lines.push({ time: Math.max(0, time), text });
+      }
+    } else if (raw.trim() && !/^\[[a-z]+:/i.test(raw.trim())) {
       lines.push({ time: null, text: raw.trim() });
     }
   }
-  return lines.filter((l) => l.text);
+  return lines.filter((line) => line.text).sort((a, b) => (a.time ?? Infinity) - (b.time ?? Infinity));
+}
+
+function startLyricsSync(nowPlaying, body) {
+  const trackKey = `${nowPlaying.track}\n${nowPlaying.artist}`;
+  const sync = {
+    body,
+    trackKey,
+    anchorPosition: Math.max(0, Number(nowPlaying.position) || 0),
+    anchorTime: performance.now(),
+    playing: Boolean(nowPlaying.playing),
+    activeIndex: -1,
+    refreshing: false,
+    lastRefresh: performance.now(),
+    timer: null,
+  };
+
+  const tick = async () => {
+    if (state.lyricsSync !== sync || !document.body.contains(body)) return;
+    const now = performance.now();
+    const position = sync.anchorPosition + (sync.playing ? (now - sync.anchorTime) / 1000 : 0);
+    const lines = Array.from(body.querySelectorAll(".lyric-line[data-time]"));
+    let activeIndex = -1;
+    for (let index = 0; index < lines.length; index++) {
+      if (Number(lines[index].dataset.time) <= position + 0.08) activeIndex = index;
+      else break;
+    }
+    if (activeIndex !== sync.activeIndex) {
+      lines[sync.activeIndex]?.classList.remove("active");
+      const active = lines[activeIndex];
+      active?.classList.add("active");
+      active?.scrollIntoView({ block: "center", behavior: "smooth" });
+      sync.activeIndex = activeIndex;
+    }
+
+    if (!sync.refreshing && now - sync.lastRefresh >= 5000) {
+      sync.refreshing = true;
+      sync.lastRefresh = now;
+      try {
+        const current = await invoke("get_now_playing");
+        if (!current || `${current.track}\n${current.artist}` !== sync.trackKey) {
+          stopLyricsSync();
+          return;
+        }
+        sync.anchorPosition = Math.max(0, Number(current.position) || 0);
+        sync.anchorTime = performance.now();
+        sync.playing = Boolean(current.playing);
+      } catch {
+        // Keep the local clock running; the next refresh may recover.
+      } finally {
+        sync.refreshing = false;
+      }
+    }
+  };
+
+  sync.timer = window.setInterval(tick, 250);
+  state.lyricsSync = sync;
+  tick();
+}
+
+function stopLyricsSync() {
+  if (!state.lyricsSync) return;
+  window.clearInterval(state.lyricsSync.timer);
+  state.lyricsSync = null;
 }
 
 // ---------- Settings ----------
@@ -701,8 +766,7 @@ async function saveSettings(patch) {
   state.settings = { ...state.settings, ...patch };
   if (patch.language) {
     await i18n.setLanguage(patch.language);
-    refreshModels();
-    refreshHistory();
+    await Promise.all([refreshModels(), refreshHistory()]);
     renderOutputDirs();
   }
   if (patch.theme) theme.setMode(patch.theme);
@@ -737,38 +801,71 @@ function escapeHtml(s) {
   return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// ---------- Backend events (global, e.g. drag-drop & model install progress) ----------
-function wireBackendEvents() {
+function errorText(error, fallbackKey) {
+  const raw = String(error?.message || error || "");
+  const code = raw.match(/HALITE_[A-Z_]+/)?.[0];
+  const byCode = {
+    HALITE_AGE_RESTRICTED: "download.ageRestricted",
+    HALITE_AUTH_REQUIRED: "download.authRequired",
+    HALITE_HELPER_SETUP: "download.helperFailed",
+    HALITE_DOWNLOAD_FAILED: "download.error",
+    HALITE_OUTPUT_MISSING: "download.outputMissing",
+    HALITE_INVALID_URL: "download.invalidUrl",
+    HALITE_JS_RUNTIME_REQUIRED: "download.jsRuntimeRequired",
+    HALITE_MODEL_MISSING: "separate.modelMissing",
+    HALITE_INVALID_TRIM: "separate.invalidTrim",
+    HALITE_INVALID_AUDIO: "separate.invalidAudio",
+    HALITE_PREVIEW_DENIED: "common.previewError",
+    HALITE_OUTPUT: "common.outputError",
+    HALITE_OPEN_FAILED: "common.openError",
+    HALITE_FFMPEG_SETUP: "common.audioConverterError",
+    HALITE_FFMPEG_FAILED: "common.audioConverterError",
+  };
+  return t(byCode[code] || fallbackKey || "common.unexpected");
+}
+
+function operationError(prefixKey, error) {
+  const prefix = t(prefixKey);
+  const detail = errorText(error, "common.unexpected");
+  return detail === prefix ? prefix : `${prefix}: ${detail}`;
+}
+
+function runPathAction(command, path) {
+  if (!path) return;
+  invoke(command, { path }).catch((error) => {
+    toast(errorText(error, "common.openError"), "error");
+  });
+}
+
+// ---------- Backend events (global, e.g. drag-drop) ----------
+async function wireBackendEvents() {
   // Tauri v2 forwards native drag-and-drop as these events.
-  listen("tauri://drag-drop", (payload) => {
-    const paths = payload && payload.paths;
-    if (Array.isArray(paths)) {
-      addFiles(paths.filter((p) => /\.(mp3|wav|flac|m4a|ogg|aac|aiff|mp4)$/i.test(p)));
-    }
-    $("#dropzone").classList.remove("dragover");
-  });
-  listen("tauri://drag-enter", () => $("#dropzone").classList.add("dragover"));
-  listen("tauri://drag-leave", () => $("#dropzone").classList.remove("dragover"));
-
-  listen("model://progress", (p) => {
-    updateModelProgress(p.model_id, p.pct);
-  });
-  listen("model://done", async (p) => {
-    toast(t("common.install") + " ✓", "ok");
-    await refreshModels();
-  });
-  listen("model://error", (p) => {
-    toast(t("separate.error") + ": " + p.message, "error");
-    refreshModels();
-  });
+  await Promise.all([
+    listen("tauri://drag-drop", (payload) => {
+      const paths = payload && payload.paths;
+      if (Array.isArray(paths)) {
+        addFiles(paths.filter((p) => /\.(mp3|wav|flac|m4a|ogg|aac|aiff|mp4)$/i.test(p)));
+      }
+      $("#dropzone").classList.remove("dragover");
+    }),
+    listen("tauri://drag-enter", () => $("#dropzone").classList.add("dragover")),
+    listen("tauri://drag-leave", () => $("#dropzone").classList.remove("dragover")),
+    listen("separation://progress", (payload) => {
+      if (payload.task_id === state.taskId) setProgress(payload.pct);
+    }),
+    listen("separation://done", (payload) => settleTask("separation", payload, "done")),
+    listen("separation://error", (payload) => settleTask("separation", payload, "error")),
+    listen("separation://cancelled", (payload) => settleTask("separation", payload, "cancelled")),
+    listen("download://progress", (payload) => {
+      if (payload.task_id === state.dlTaskId) setDlProgress(payload.pct);
+    }),
+    listen("download://done", (payload) => settleTask("download", payload, "done")),
+    listen("download://error", (payload) => settleTask("download", payload, "error")),
+    listen("download://cancelled", (payload) => settleTask("download", payload, "cancelled")),
+  ]);
 }
 
-function updateModelProgress(modelId, pct) {
-  const idx = state.models.findIndex((m) => m.id === modelId);
-  if (idx < 0) return;
-  const item = $("#models-list").querySelectorAll(".model-item")[idx];
-  const btn = item && item.querySelector(".btn");
-  if (btn) btn.textContent = t("common.installing") + " " + Math.round(pct * 100) + "%";
-}
-
-init();
+init().catch((error) => {
+  console.error(error);
+  toast(errorText(error, "common.unexpected"), "error");
+});

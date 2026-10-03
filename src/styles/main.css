@@ -77,6 +77,9 @@ body {
   border-right: 1px solid var(--border);
 }
 
+/* Leave room for the native traffic-light controls without shifting other platforms. */
+html[data-platform="macos"] .sidebar { padding-top: 48px; }
+
 .brand {
   display: flex;
   align-items: center;

@@ -17,8 +17,14 @@
     "installing": "インストール中…",
     "downloading": "ダウンロード中…",
     "close": "閉じる",
-    "confirmDelete": "本当に削除しますか？",
-    "notinstalled": "未インストール"
+    "confirmDelete": "この項目を履歴から削除しますか？出力ファイルは保持されます。",
+    "notinstalled": "未インストール",
+    "bundled": "同梱済み",
+    "previewError": "音声プレビューを再生できませんでした",
+    "unexpected": "予期しないエラーが発生しました",
+    "outputError": "出力フォルダーを使用できませんでした",
+    "openError": "ファイルまたはフォルダーを開けませんでした",
+    "audioConverterError": "音声変換機能を準備できませんでした"
   },
   "separate": {
     "title": "ステム分離",
@@ -46,7 +52,10 @@
     "cancelled": "分離をキャンセルしました",
     "noFile": "音声ファイルを1つ以上追加してください",
     "analyzing": "解析中…",
-    "noModel": "先にモデルをインストールしてください（設定 → AIモデル）",
+    "noModel": "同梱のAIモデルが見つかりません",
+    "modelMissing": "同梱のAIモデルが見つかりません。Haliteを再インストールしてください。",
+    "invalidTrim": "トリミング範囲が正しくありません",
+    "invalidAudio": "選択した音声ファイルを開けませんでした",
     "stemsReady": "ステムが準備できました"
   },
   "stems": {
@@ -68,7 +77,13 @@
     "cancelled": "ダウンロードをキャンセルしました",
     "needUrl": "URLを入力してください",
     "installingYtDlp": "ダウンローダーを準備中…",
-    "pickFolder": "フォルダーを選択"
+    "pickFolder": "フォルダーを選択",
+    "invalidUrl": "有効なウェブアドレスを入力してください",
+    "ageRestricted": "この動画には年齢制限があります。HaliteはYouTubeのログイン要件を回避できません。",
+    "authRequired": "このダウンロードにはアカウントまたはブラウザー認証が必要です",
+    "helperFailed": "ダウンロード機能を準備できませんでした。接続を確認して再試行してください。",
+    "outputMissing": "ダウンロードしたファイルは存在しません",
+    "jsRuntimeRequired": "このサイトにはJavaScriptランタイムが必要です。DenoまたはNode.jsをインストールして再試行してください。"
   },
   "lyrics": {
     "title": "歌詞",
@@ -80,24 +95,33 @@
     "noSource": "音楽ソースを検出できません",
     "instrumental": "この曲はインストゥルメンタルです",
     "loading": "読み込み中…",
-    "nothingPlaying": "現在再生中のものはありません"
+    "nothingPlaying": "現在再生中のものはありません",
+    "error": "歌詞を読み込めませんでした"
+  },
+  "music": {
+    "major": "メジャー",
+    "minor": "マイナー"
   },
   "settings": {
     "title": "設定",
     "language": "言語",
     "theme": "テーマ",
-    "theme.system": "システム",
-    "theme.light": "ライト",
-    "theme.dark": "ダーク",
     "models": "AIモデル",
     "about": "このアプリについて",
     "version": "バージョン",
-    "outputFolder": "既定の出力フォルダー"
+    "outputFolder": "既定の出力フォルダー",
+    "themeSystem": "システム",
+    "themeLight": "ライト",
+    "themeDark": "ダーク"
   },
   "models": {
-    "htdemucs.name": "htdemucs — 高品質",
-    "htdemucs.desc": "4ステム: ドラム、ベース、その他、ボーカル",
-    "htdemucs_fp16.name": "htdemucs — 軽量",
-    "htdemucs_fp16.desc": "同じステム、半分のダウンロードサイズ"
+    "htdemucs": {
+      "name": "htdemucs — 高品質",
+      "desc": "4ステム: ドラム、ベース、その他、ボーカル"
+    },
+    "htdemucs_fp16": {
+      "name": "htdemucs — 軽量",
+      "desc": "小容量の同梱モデルで同じ4ステムを分離"
+    }
   }
 }
