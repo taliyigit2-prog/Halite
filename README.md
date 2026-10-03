@@ -79,9 +79,10 @@ Gatekeeper may warn on first launch. To open it:
 
 ### First run
 
-On first launch Halite downloads a small helper (`yt-dlp`) and, when you start a
-separation, the chosen AI model (~170–330 MB). Both are cached locally and
-downloaded only once.
+The AI models are **bundled inside the app** — no download and no manual setup
+needed. Only the Download tab downloads a small helper (`yt-dlp`) the first time
+you use it; that helper is verified and cached in Halite's application-data folder.
+Formats that require conversion also use system FFmpeg or prepare it there once.
 
 ---
 
@@ -90,12 +91,13 @@ downloaded only once.
 Halite uses the open-source
 [HT-Demucs](https://github.com/facebookresearch/demucs) model exported to ONNX:
 
-- `htdemucs.onnx` — high quality, 4 stems (~331 MB)
-- `htdemucs_fp16weights.onnx` — lighter download (~174 MB)
+- `htdemucs.onnx` — high quality, 4 stems (~316 MB)
+- `htdemucs_fp16weights.onnx` — lighter, same stems (~166 MB)
 
-Models are provided by
+Both models are **bundled in the app** and run locally with
+[ONNX Runtime](https://onnxruntime.ai). They are provided by
 [StemSplitio/htdemucs-onnx](https://huggingface.co/StemSplitio/htdemucs-onnx)
-(MIT) and are fetched from Hugging Face on first use.
+(MIT).
 
 ---
 
@@ -144,7 +146,8 @@ Halite stands on the shoulders of these great open-source projects:
 ## 📄 License
 
 Halite is released under the [MIT License](LICENSE). The AI models are MIT
-licensed by their respective authors.
+licensed by their respective authors. See [Third-party notices](THIRD_PARTY_NOTICES.md)
+for bundled and runtime-downloaded components.
 
 > **Disclaimer:** Halite is provided for personal, educational and fair use.
 > Please respect the copyright and terms of service of the content you process

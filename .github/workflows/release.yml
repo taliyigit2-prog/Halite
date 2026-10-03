@@ -47,7 +47,25 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libgtk-3-dev libayatana-appindicator3-dev
 
       - name: Install frontend dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Cache bundled AI models
+        uses: actions/cache@v4
+        with:
+          path: src-tauri/resources/models
+          key: models-${{ hashFiles('scripts/fetch-models.mjs') }}
+
+      - name: Prepare and verify bundled assets
+        run: npm run prepare-assets
+
+      - name: Check JavaScript sources
+        run: npm run check-js
+
+      - name: Check locale bundle
+        run: npm run check-locales
+
+      - name: Run Rust tests
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0

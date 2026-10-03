@@ -80,9 +80,10 @@ peut afficher un avertissement au premier lancement. Pour l'ouvrir :
 
 ### Premier lancement
 
-Au premier lancement, Halite télécharge un petit utilitaire (`yt-dlp`) puis, dès
-que vous lancez une séparation, le modèle IA choisi (~170–330 Mo). Les deux sont
-mis en cache localement et téléchargés une seule fois.
+Les modèles IA sont **inclus dans l'application** ; aucun téléchargement ni réglage
+manuel n'est nécessaire. Seul l'onglet Télécharger récupère à sa première utilisation
+un petit utilitaire vérifié (`yt-dlp`) dans les données de Halite. Les formats à
+convertir utilisent FFmpeg du système ou l'y préparent une fois.
 
 ---
 
@@ -91,12 +92,12 @@ mis en cache localement et téléchargés une seule fois.
 Halite utilise le modèle open source
 [HT-Demucs](https://github.com/facebookresearch/demucs) exporté en ONNX :
 
-- `htdemucs.onnx` — haute qualité, 4 pistes (~331 Mo)
-- `htdemucs_fp16weights.onnx` — téléchargement plus léger (~174 Mo)
+- `htdemucs.onnx` — haute qualité, 4 pistes (~316 Mo)
+- `htdemucs_fp16weights.onnx` — plus petit, mêmes pistes (~166 Mo)
 
 Les modèles sont fournis par
 [StemSplitio/htdemucs-onnx](https://huggingface.co/StemSplitio/htdemucs-onnx)
-(MIT) et téléchargés depuis Hugging Face au premier usage.
+(MIT), inclus dans l'application et exécutés localement avec ONNX Runtime.
 
 ---
 

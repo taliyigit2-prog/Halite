@@ -79,9 +79,10 @@ ilk açılışta uyarı verebilir. Açmak için:
 
 ### İlk çalıştırma
 
-İlk açılışta Halite küçük bir yardımcı (`yt-dlp`) ve bir ayrıştırma başlattığınızda
-seçtiğiniz yapay zekâ modelini (~170–330 MB) indirir. İkisi de yerel olarak
-önbelleğe alınır ve yalnızca bir kez indirilir.
+Yapay zekâ modelleri **uygulamanın içinde gelir**; ayrıca indirme ya da elle kurulum
+gerekmez. Yalnızca İndirme sekmesi ilk kullanımda küçük bir yardımcıyı (`yt-dlp`)
+doğrulayarak Halite'ın uygulama verisi klasörüne indirir. Dönüştürme gerektiren
+formatlar sistemdeki FFmpeg'i kullanır veya onu aynı konumda bir kez hazırlar.
 
 ---
 
@@ -90,11 +91,12 @@ seçtiğiniz yapay zekâ modelini (~170–330 MB) indirir. İkisi de yerel olara
 Halite, açık kaynaklı [HT-Demucs](https://github.com/facebookresearch/demucs)
 modelinin ONNX'e aktarılmış halini kullanır:
 
-- `htdemucs.onnx` — yüksek kalite, 4 katman (~331 MB)
-- `htdemucs_fp16weights.onnx` — daha hafif indirme (~174 MB)
+- `htdemucs.onnx` — yüksek kalite, 4 katman (~316 MB)
+- `htdemucs_fp16weights.onnx` — daha hafif, aynı katmanlar (~166 MB)
 
 Modeller [StemSplitio/htdemucs-onnx](https://huggingface.co/StemSplitio/htdemucs-onnx)
-(MIT) tarafından sağlanır ve ilk kullanımda Hugging Face'ten indirilir.
+(MIT) tarafından sağlanır, uygulamayla birlikte gelir ve ONNX Runtime ile tamamen
+yerel olarak çalışır.
 
 ---
 
@@ -143,7 +145,8 @@ Halite şu harika açık kaynak projelerin üzerine inşa edilmiştir:
 ## 📄 Lisans
 
 Halite [MIT Lisansı](LICENSE) ile yayınlanmıştır. Yapay zekâ modelleri ilgili
-yazarları tarafından MIT ile lisanslanmıştır.
+yazarları tarafından MIT ile lisanslanmıştır. Uygulamayla gelen ve çalışma anında
+indirilen bileşenler için [üçüncü taraf bildirimlerine](THIRD_PARTY_NOTICES.md) bakın.
 
 > **Sorumluluk reddi:** Halite kişisel, eğitimsel ve adil kullanım için sunulur.
 > İşlediğiniz veya indirdiğiniz içeriğin telif haklarına ve kullanım koşullarına

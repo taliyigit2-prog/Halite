@@ -79,9 +79,10 @@ beim ersten Start warnen. Zum Öffnen:
 
 ### Erster Start
 
-Beim ersten Start lädt Halite einen kleinen Helfer (`yt-dlp`) und — sobald du eine
-Trennung startest — das gewählte KI-Modell (~170–330 MB). Beides wird lokal
-zwischengespeichert und nur einmal heruntergeladen.
+Die KI-Modelle sind **in der App enthalten**; ein Download oder eine manuelle
+Einrichtung ist nicht nötig. Nur der Download-Bereich lädt bei der ersten Nutzung
+einen kleinen, geprüften Helfer (`yt-dlp`) in Halites App-Datenordner. Formate mit
+Konvertierung nutzen System-FFmpeg oder richten es dort einmalig ein.
 
 ---
 
@@ -90,12 +91,12 @@ zwischengespeichert und nur einmal heruntergeladen.
 Halite nutzt das Open-Source-Modell
 [HT-Demucs](https://github.com/facebookresearch/demucs) als ONNX-Export:
 
-- `htdemucs.onnx` — hohe Qualität, 4 Stems (~331 MB)
-- `htdemucs_fp16weights.onnx` — leichterer Download (~174 MB)
+- `htdemucs.onnx` — hohe Qualität, 4 Stems (~316 MB)
+- `htdemucs_fp16weights.onnx` — kleiner, dieselben Stems (~166 MB)
 
 Die Modelle stammen von
 [StemSplitio/htdemucs-onnx](https://huggingface.co/StemSplitio/htdemucs-onnx)
-(MIT) und werden beim ersten Einsatz von Hugging Face geladen.
+(MIT), sind in der App enthalten und laufen mit ONNX Runtime vollständig lokal.
 
 ---
 

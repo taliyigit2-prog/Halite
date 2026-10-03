@@ -79,9 +79,10 @@ Apple Developerアカウントで公証されていないため、初回起動�
 
 ### 初回起動
 
-初回起動時にHaliteは小さなヘルパー（`yt-dlp`）を、分離を開始すると選択した
-AIモデル（約170〜330 MB）をダウンロードします。どちらもローカルにキャッシュ
-され、ダウンロードは一度だけです。
+AIモデルは**アプリに同梱**されているため、ダウンロードや手動設定は不要です。
+ダウンロード画面のみ、初回使用時に検証済みの小さなヘルパー（`yt-dlp`）を
+Haliteのアプリデータフォルダーへ取得します。変換が必要な形式ではシステムの
+FFmpegを使用するか、同じ場所に一度だけ準備します。
 
 ---
 
@@ -90,12 +91,12 @@ AIモデル（約170〜330 MB）をダウンロードします。どちらもロ
 Haliteはオープンソースの[HT-Demucs](https://github.com/facebookresearch/demucs)
 モデルをONNXに書き出したものを使用します：
 
-- `htdemucs.onnx` — 高品質・4ステム（約331 MB）
-- `htdemucs_fp16weights.onnx` — 軽量ダウンロード（約174 MB）
+- `htdemucs.onnx` — 高品質・4ステム（約316 MB）
+- `htdemucs_fp16weights.onnx` — 小容量・同じステム（約166 MB）
 
 モデルは
 [StemSplitio/htdemucs-onnx](https://huggingface.co/StemSplitio/htdemucs-onnx)
-（MIT）が提供し、初回使用時にHugging Faceから取得されます。
+（MIT）が提供し、アプリに同梱され、ONNX Runtimeで完全にローカル実行されます。
 
 ---
 
