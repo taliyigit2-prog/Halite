@@ -45,3 +45,4 @@ __pycache__/
 *.db-shm
 *.db-wal
 credentials.json
+release-inventory/

@@ -1,14 +1,10 @@
 name: release
-
 on:
   push:
-    tags:
-      - "v*"
+    tags: ["v*"]
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
   build:
     strategy:
@@ -16,64 +12,72 @@ jobs:
       matrix:
         include:
           - platform: macos-latest
-            args: "--target aarch64-apple-darwin"
+            target: aarch64-apple-darwin
           - platform: macos-latest
-            args: "--target x86_64-apple-darwin"
+            target: x86_64-apple-darwin
           - platform: windows-latest
-            args: ""
+            target: x86_64-pc-windows-msvc
           - platform: ubuntu-22.04
-            args: ""
-
+            target: x86_64-unknown-linux-gnu
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
-
-      - uses: dtolnay/rust-toolchain@stable
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-
-      - uses: swatinem/rust-cache@v2
+          targets: ${{ matrix.target }}
+      - uses: swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
-          workspaces: "./src-tauri -> target"
-
-      - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libgtk-3-dev libayatana-appindicator3-dev
-
-      - name: Install frontend dependencies
-        run: npm ci
-
-      - name: Cache bundled AI models
-        uses: actions/cache@v4
+          workspaces: ./src-tauri -> target
+      - name: Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      - run: npm ci
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: src-tauri/resources/models
           key: models-${{ hashFiles('scripts/fetch-models.mjs') }}
-
-      - name: Prepare and verify bundled assets
-        run: npm run prepare-assets
-
-      - name: Check JavaScript sources
-        run: npm run check-js
-
-      - name: Check locale bundle
-        run: npm run check-locales
-
-      - name: Run Rust tests
-        run: cargo test --locked --manifest-path src-tauri/Cargo.toml
-
-      - name: Build the app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify sources
+        run: |
+          npm run check-js
+          npm run check-locales
+          npm test
+          python3 -m unittest discover -s tests -p 'test_*.py'
+          cargo test --locked --manifest-path src-tauri/Cargo.toml
+      - name: Build release
+        run: npm run build -- --target ${{ matrix.target }}
+      - name: Inventory and checksums
+        run: node scripts/release-inventory.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Halite ${{ github.ref_name }}"
-          releaseDraft: true
-          prerelease: false
-          args: ${{ matrix.args }}
+          name: Halite-${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            src-tauri/target/**/*.dmg
+            src-tauri/target/**/*.msi
+            src-tauri/target/**/nsis/*.exe
+            src-tauri/target/**/*.deb
+            src-tauri/target/**/*.rpm
+            src-tauri/target/**/*.AppImage
+            release-inventory/
+  publish:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: artifacts
+      - name: Publish reviewed draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" --verify-tag --draft --generate-notes --title "Halite $RELEASE_TAG"
+          find artifacts -type f -print0 | xargs -0 -I{} gh release upload "$RELEASE_TAG" "{}" --clobber
