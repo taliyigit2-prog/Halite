@@ -25,3 +25,23 @@ Thumbs.db
 
 # Misc
 *.log
+
+# Local AI environments, caches and private signing material
+.venv/
+__pycache__/
+*.pyc
+.uv-cache/
+*.part
+*.halite-backup
+*.pem
+*.key
+*.p12
+*.pfx
+*.mobileprovision
+*.dmg
+*.msi
+*.AppImage
+*.db
+*.db-shm
+*.db-wal
+credentials.json

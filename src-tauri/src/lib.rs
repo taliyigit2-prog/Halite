@@ -8,6 +8,8 @@ mod lyrics;
 mod nowplaying;
 mod separation;
 mod state;
+mod metadata;
+mod studio;
 
 use std::sync::Arc;
 use tauri::Manager;
@@ -29,9 +31,6 @@ pub fn run() {
             commands::cancel_separation,
             commands::list_jobs,
             commands::delete_job,
-            commands::save_preset,
-            commands::list_presets,
-            commands::delete_preset,
             commands::pick_audio_files,
             commands::pick_folder,
             commands::open_path,
@@ -39,7 +38,23 @@ pub fn run() {
             commands::allow_audio_preview,
             commands::download,
             commands::cancel_download,
-            commands::is_ytdlp_installed,
+            metadata::pick_tag_files,
+            metadata::pick_cover,
+            metadata::save_tags,
+            metadata::restore_tags,
+            metadata::export_cover,
+            metadata::search_metadata,
+            studio::studio_status,
+            studio::install_studio,
+            studio::generate_speech,
+            studio::cancel_studio,
+            studio::pick_studio_reference,
+            studio::verify_studio,
+            studio::remove_studio,
+            studio::export_speech,
+            studio::save_voice_profile,
+            studio::list_voice_profiles,
+            studio::delete_voice_profile,
             commands::get_settings,
             commands::set_settings,
             commands::get_lyrics,

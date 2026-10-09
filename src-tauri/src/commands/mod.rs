@@ -358,7 +358,7 @@ pub fn cancel_separation(state: State<Arc<AppState>>, task_id: String) {
     state.request_cancel(&task_id);
 }
 
-// ---------- Jobs & presets ----------
+// ---------- Jobs ----------
 
 #[tauri::command]
 pub fn list_jobs(state: State<Arc<AppState>>) -> Result<Vec<crate::db::Job>> {
@@ -376,39 +376,6 @@ pub fn delete_job(state: State<Arc<AppState>>, id: i64) -> Result<()> {
         .lock()
         .map_err(|_| Error::Message("database lock failed".to_string()))?;
     db.delete_job(id)
-}
-
-#[tauri::command]
-pub fn save_preset(
-    state: State<Arc<AppState>>,
-    name: String,
-    model_id: String,
-    stems_json: String,
-    format: String,
-) -> Result<i64> {
-    let db = state
-        .db
-        .lock()
-        .map_err(|_| Error::Message("database lock failed".to_string()))?;
-    db.save_preset(&name, &model_id, &stems_json, &format)
-}
-
-#[tauri::command]
-pub fn list_presets(state: State<Arc<AppState>>) -> Result<Vec<crate::db::Preset>> {
-    let db = state
-        .db
-        .lock()
-        .map_err(|_| Error::Message("database lock failed".to_string()))?;
-    db.list_presets()
-}
-
-#[tauri::command]
-pub fn delete_preset(state: State<Arc<AppState>>, id: i64) -> Result<()> {
-    let db = state
-        .db
-        .lock()
-        .map_err(|_| Error::Message("database lock failed".to_string()))?;
-    db.delete_preset(id)
 }
 
 // ---------- File dialogs & path helpers ----------
@@ -562,11 +529,6 @@ pub async fn download(
 #[tauri::command]
 pub fn cancel_download(state: State<Arc<AppState>>, task_id: String) {
     state.request_cancel(&task_id);
-}
-
-#[tauri::command]
-pub fn is_ytdlp_installed(state: State<Arc<AppState>>) -> bool {
-    crate::downloader::is_ytdlp_installed(&state.data_dir)
 }
 
 // ---------- Settings ----------

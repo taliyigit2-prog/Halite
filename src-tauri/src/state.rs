@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
@@ -30,6 +30,8 @@ pub struct AppState {
     pub cancel_flags: Mutex<HashMap<String, Arc<AtomicBool>>>,
     pub data_dir: PathBuf,
     pub resource_dir: PathBuf,
+    pub selected_files: Mutex<HashSet<PathBuf>>,
+    pub studio_busy: AtomicBool,
 }
 
 impl AppState {
@@ -42,6 +44,8 @@ impl AppState {
             cancel_flags: Mutex::new(HashMap::new()),
             data_dir,
             resource_dir,
+            selected_files: Mutex::new(HashSet::new()),
+            studio_busy: AtomicBool::new(false),
         })
     }
 

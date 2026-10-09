@@ -172,10 +172,6 @@ pub fn ensure_ytdlp(
     Ok(path)
 }
 
-pub fn is_ytdlp_installed(data_dir: &Path) -> bool {
-    ytdlp_is_usable(&ytdlp_path(data_dir))
-}
-
 fn executable_on_path(names: &[&str]) -> Option<PathBuf> {
     let path = std::env::var_os("PATH")?;
     for dir in std::env::split_paths(&path) {

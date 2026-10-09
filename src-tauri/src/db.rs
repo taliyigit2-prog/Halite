@@ -22,16 +22,6 @@ pub struct Job {
     pub stems: Vec<Stem>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Preset {
-    pub id: i64,
-    pub name: String,
-    pub model_id: String,
-    pub stems_json: String,
-    pub format: String,
-    pub created_at: i64,
-}
-
 pub struct Db {
     conn: Connection,
 }
@@ -63,14 +53,6 @@ impl Db {
                 FOREIGN KEY(job_id) REFERENCES jobs(id) ON DELETE CASCADE
             );
             CREATE INDEX IF NOT EXISTS idx_stems_job ON stems(job_id);
-            CREATE TABLE IF NOT EXISTS presets (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                name       TEXT NOT NULL,
-                model_id   TEXT NOT NULL,
-                stems_json TEXT NOT NULL,
-                format     TEXT NOT NULL,
-                created_at INTEGER NOT NULL
-            );
             DELETE FROM jobs WHERE NOT EXISTS (
                 SELECT 1 FROM stems WHERE stems.job_id = jobs.id
             );
@@ -176,47 +158,6 @@ impl Db {
         Ok(())
     }
 
-    pub fn save_preset(
-        &self,
-        name: &str,
-        model_id: &str,
-        stems_json: &str,
-        format: &str,
-    ) -> Result<i64> {
-        if name.trim().is_empty() {
-            return Err(Error::Message("Preset name cannot be empty".to_string()));
-        }
-        self.conn.execute(
-            "INSERT INTO presets (name, model_id, stems_json, format, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![name, model_id, stems_json, format, now_millis()],
-        )?;
-        Ok(self.conn.last_insert_rowid())
-    }
-
-    pub fn list_presets(&self) -> Result<Vec<Preset>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT id, name, model_id, stems_json, format, created_at
-             FROM presets ORDER BY created_at DESC",
-        )?;
-        let rows = stmt.query_map([], |row| {
-            Ok(Preset {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                model_id: row.get(2)?,
-                stems_json: row.get(3)?,
-                format: row.get(4)?,
-                created_at: row.get(5)?,
-            })
-        })?;
-        rows.collect::<rusqlite::Result<Vec<_>>>().map_err(Error::from)
-    }
-
-    pub fn delete_preset(&self, id: i64) -> Result<()> {
-        self.conn
-            .execute("DELETE FROM presets WHERE id = ?1", params![id])?;
-        Ok(())
-    }
 }
 
 fn now_millis() -> i64 {
