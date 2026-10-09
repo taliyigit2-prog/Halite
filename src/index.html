@@ -36,6 +36,14 @@
             <svg viewBox="0 0 24 24" class="ico"><path d="M4 5v14M4 5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 0-2 2m0-4a2 2 0 0 1 2-2m14-8v12m-2-12h4m-4 0v4"/></svg>
             <span data-i18n="nav.lyrics">Lyrics</span>
           </button>
+          <button class="nav-item" data-tab="tags">
+            <svg viewBox="0 0 24 24" class="ico"><path d="M3 3h8l10 10-8 8L3 11Z"/><circle cx="7" cy="7" r="1"/></svg>
+            <span data-i18n="nav.tags">Tags</span>
+          </button>
+          <button class="nav-item" data-tab="studio">
+            <svg viewBox="0 0 24 24" class="ico"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/></svg>
+            <span data-i18n="nav.studio">Voice Studio</span>
+          </button>
         </nav>
 
         <div class="sidebar-bottom">
@@ -184,6 +192,50 @@
           <div class="lyrics-results" id="lyrics-results"></div>
         </section>
 
+        <!-- ===================== TAGS ===================== -->
+        <section class="tab" id="tab-tags">
+          <header class="tab-header"><h1 data-i18n="tags.title">Tag Editor</h1><p class="muted" data-i18n="tags.subtitle">Organize your music with local metadata, artwork and lyrics.</p></header>
+          <div class="actions"><button class="btn btn-primary" id="tag-pick" data-i18n="separate.choose">Choose files</button><button class="btn btn-ghost" id="tag-clear" data-i18n="tags.clear">Clear selection</button><span class="muted" id="tag-count" aria-live="polite"></span></div>
+          <div class="file-list" id="tag-files"></div>
+          <div id="tag-editor" class="hidden">
+            <div class="panel" id="tag-fields"></div>
+            <div class="panel cover-panel">
+              <img id="tag-cover" class="cover-preview hidden" alt="Album artwork" data-i18n-alt="tags.cover" />
+              <div class="field grow"><label data-i18n="tags.cover">Cover artwork</label><span class="muted" id="tag-cover-info"></span><div class="row wrap"><button class="btn btn-ghost" id="tag-cover-pick" data-i18n="tags.chooseCover">Choose cover</button><button class="btn btn-ghost" id="tag-cover-remove" data-i18n="tags.removeCover">Remove cover</button><button class="btn btn-ghost" id="tag-export-cover" data-i18n="tags.exportCover">Export cover</button></div></div>
+            </div>
+            <div class="panel"><div class="field grow"><label for="tag-search" data-i18n="tags.search">MusicBrainz search</label><input class="input" id="tag-search" maxlength="300" data-i18n-ph="tags.searchPlaceholder" /><span class="muted" data-i18n="tags.network">Optional online lookup. Your audio is never uploaded.</span></div><button class="btn btn-ghost" id="tag-search-button" data-i18n="lyrics.searchBtn">Search</button><div id="tag-search-results" class="full-width metadata-results"></div></div>
+            <div class="actions"><button class="btn btn-primary btn-lg" id="tag-save" data-i18n="tags.save">Review &amp; save</button><button class="btn btn-ghost" id="tag-restore" data-i18n="tags.restore">Restore last backup</button></div>
+            <p class="muted helper-text" data-i18n="tags.backup">A .halite-backup copy is kept beside each edited file.</p>
+            <p class="muted helper-text" id="tag-technical"></p>
+          </div>
+          <p class="muted helper-text" id="tag-status" role="status"></p><p id="tag-errors" class="error-details" role="alert"></p>
+        </section>
+
+        <!-- ===================== VOICE STUDIO ===================== -->
+        <section class="tab" id="tab-studio">
+          <header class="tab-header"><h1 data-i18n="studio.title">Voice Studio</h1><p class="muted" data-i18n="studio.subtitle">Create speech and bring your own voice to life — on your device.</p></header>
+          <div class="panel" id="studio-setup"><div class="field grow"><strong data-i18n="studio.setupTitle">Prepare your voice studio</strong><p class="muted" id="studio-setup-info"></p><p class="muted" data-i18n="studio.license">Chatterbox Multilingual V3 · MIT · local processing</p></div><button class="btn btn-primary" id="studio-install" data-i18n="studio.prepare">Prepare automatically</button></div>
+          <div class="panel">
+            <div class="field grow"><label for="studio-mode" data-i18n="studio.mode">Mode</label><select id="studio-mode"><option value="tts" data-i18n="studio.tts">Text to speech</option><option value="clone" data-i18n="studio.clone">Voice cloning</option></select></div>
+            <div class="field grow"><label for="studio-language" data-i18n="studio.language">Speech language</label><select id="studio-language"></select></div>
+            <div class="field"><label for="studio-device" data-i18n="studio.device">Processing</label><select id="studio-device"><option value="auto" data-i18n="studio.automatic">Automatic</option><option value="cpu">CPU</option></select></div>
+            <div class="field full-width"><label for="studio-text" data-i18n="studio.text">What should the voice say?</label><textarea class="input" id="studio-text" rows="6" maxlength="3000" data-i18n-ph="studio.placeholder"></textarea><span class="muted" id="studio-text-count">0 / 3000</span></div>
+          </div>
+          <div class="panel hidden" id="studio-reference-panel">
+            <div class="field grow"><label data-i18n="studio.reference">Reference voice · 3–30 seconds</label><button class="btn btn-ghost" id="studio-pick-reference" data-i18n="studio.chooseReference">Choose reference audio</button><span class="muted" id="studio-reference-name"></span><label class="consent-label"><input type="checkbox" id="studio-consent" /><span data-i18n="studio.consent">I have permission to use and clone this voice.</span></label></div>
+            <div class="field grow"><label for="studio-profile" data-i18n="studio.profiles">Saved local voices</label><select id="studio-profile"></select><input class="input" id="studio-profile-name" maxlength="64" data-i18n-ph="studio.profileName" /><div class="row wrap"><button class="btn btn-ghost" id="studio-save-profile" data-i18n="studio.saveProfile">Save voice</button><button class="btn btn-ghost" id="studio-delete-profile" data-i18n="common.delete">Delete</button></div></div>
+          </div>
+          <div class="panel">
+            <div class="field grow"><label for="studio-expression" data-i18n="studio.expression">Expression</label><input class="input" type="number" id="studio-expression" min="0" max="2" step="0.1" value="0.5" /></div>
+            <div class="field grow"><label for="studio-guidance" data-i18n="studio.guidance">Voice guidance</label><input class="input" type="number" id="studio-guidance" min="0" max="1" step="0.1" value="0.5" /></div>
+            <div class="field grow"><label for="studio-seed">Seed</label><input class="input" type="number" id="studio-seed" min="0" max="4294967295" step="1" value="42" /></div>
+          </div>
+          <p class="muted helper-text" data-i18n="studio.localNotice">Reference audio stays on your device. Generated speech contains a PerTh watermark.</p>
+          <div class="actions"><button class="btn btn-ghost btn-lg" id="studio-preview" data-i18n="studio.preview">Short preview</button><button class="btn btn-primary btn-lg" id="studio-generate" data-i18n="studio.generate">Generate speech</button><button class="btn btn-danger btn-lg hidden" id="studio-cancel" data-i18n="common.cancel">Cancel</button></div>
+          <div class="progress hidden" id="studio-progress" role="status"><div class="progress-bar"><div class="progress-fill" id="studio-progress-fill"></div></div><span class="progress-label" id="studio-progress-label"></span></div>
+          <p class="muted helper-text" id="studio-status" role="status"></p><div id="studio-results" class="history"></div>
+        </section>
+
         <!-- ===================== SETTINGS ===================== -->
         <section class="tab" id="tab-settings">
           <header class="tab-header">
@@ -215,6 +267,7 @@
 
           <h2 class="section-title" data-i18n="settings.models">AI models</h2>
           <div class="models" id="models-list"></div>
+          <div class="panel"><div class="field grow"><strong data-i18n="studio.title">Voice Studio</strong><span class="muted" id="studio-pack-info"></span><span class="muted selectable-path" id="studio-pack-location"></span></div><div class="row wrap"><button class="btn btn-ghost" id="studio-verify" data-i18n="studio.verify">Verify installation</button><button class="btn btn-ghost" id="studio-remove" data-i18n="studio.remove">Remove voice engine</button></div></div>
 
           <h2 class="section-title" data-i18n="settings.about">About</h2>
           <div class="panel about">
@@ -228,7 +281,8 @@
       </main>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <dialog id="confirm-dialog"><form method="dialog"><h2 id="confirm-title"></h2><p class="muted" id="confirm-message"></p><ul id="confirm-details"></ul><div class="actions"><button class="btn btn-ghost" value="cancel" data-i18n="common.cancel">Cancel</button><button class="btn btn-primary" value="accept" data-i18n="common.continue">Continue</button></div></form></dialog>
 
     <script src="./js/locales.js"></script>
     <script type="module" src="./js/app.js"></script>

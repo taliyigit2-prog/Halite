@@ -75,6 +75,7 @@ body {
   backdrop-filter: saturate(180%) blur(24px);
   -webkit-backdrop-filter: saturate(180%) blur(24px);
   border-right: 1px solid var(--border);
+  overflow-y: auto;
 }
 
 /* Leave room for the native traffic-light controls without shifting other platforms. */
@@ -108,7 +109,7 @@ html[data-platform="macos"] .sidebar { padding-top: 48px; }
 .brand-logo .b4 { height: 85%; }
 .brand-logo .b5 { height: 60%; }
 
-.brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.3; }
 .brand-name { font-weight: 700; font-size: 15px; }
 .brand-tag { font-size: 11px; color: var(--text-muted); }
 
@@ -321,6 +322,28 @@ select:focus, .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px 
 .toast.ok { border-color: var(--ok); color: var(--ok); }
 
 .hidden { display: none !important; }
+
+/* Feature panels reuse the established card and button system. */
+.full-width { flex-basis: 100%; width: 100%; }
+.wrap { flex-wrap: wrap; }
+.helper-text { margin: 12px 0; line-height: 1.6; }
+.cover-panel { align-items: center; }
+.cover-preview { width: 120px; height: 120px; border-radius: var(--radius-sm); object-fit: contain; background: var(--bg-2); }
+textarea.input { resize: vertical; min-height: 64px; line-height: 1.6; }
+.metadata-results { display: grid; gap: 8px; }
+.metadata-match { text-align: left; white-space: normal; }
+.error-details { white-space: pre-wrap; color: var(--danger); font-size: 13px; margin-top: 12px; }
+.consent-label { display: flex; align-items: flex-start; gap: 8px; text-transform: none !important; line-height: 1.5; letter-spacing: normal !important; }
+.consent-label input { margin-top: 3px; }
+.selectable-path { overflow-wrap: anywhere; user-select: text; }
+.speech-player { width: 100%; margin-top: 10px; height: 34px; }
+dialog { border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--card-solid); color: var(--text); padding: 24px; margin: auto; max-width: min(580px, 90vw); max-height: 80vh; overflow: auto; box-shadow: var(--shadow); }
+dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+dialog h2 { margin-bottom: 12px; font-size: 20px; }
+dialog p { line-height: 1.6; }
+dialog ul { margin: 16px 0 0 20px; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }

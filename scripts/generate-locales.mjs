@@ -11,9 +11,13 @@ const check = process.argv.includes("--check");
 const expectedLanguages = ["de", "en", "es", "fr", "ja", "ru", "tr"];
 
 const languages = {};
-for (const name of readdirSync(localeDir).filter((name) => name.endsWith(".json")).sort()) {
+const features = JSON.parse(readFileSync(join(localeDir, "features.json"), "utf8"));
+for (const name of readdirSync(localeDir).filter((name) => name.endsWith(".json") && name !== "features.json").sort()) {
   const code = name.replace(/\.json$/, "");
-  languages[code] = JSON.parse(readFileSync(join(localeDir, name), "utf8"));
+  const base = JSON.parse(readFileSync(join(localeDir, name), "utf8"));
+  const extra = features[code];
+  if (!extra) throw new Error(`missing feature locale ${code}`);
+  languages[code] = { ...base, nav: { ...base.nav, ...extra.nav }, common: { ...base.common, ...extra.common }, tags: extra.tags, studio: extra.studio };
 }
 
 const actualLanguages = Object.keys(languages);

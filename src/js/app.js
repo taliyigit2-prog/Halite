@@ -1,9 +1,12 @@
 import { invoke, listen, convertFileSrc, platform } from "./api.js";
 import { i18n } from "./i18n.js";
 import { theme } from "./theme.js";
+import { initTags } from "./tags.js";
+import { initStudio, refreshStudio } from "./studio.js";
+import { waitForTask, settleTask, dropTaskWaiter } from "./tasks.js";
 
-const t = (k, v) => i18n.t(k, v);
-const $ = (sel) => document.querySelector(sel);
+import { $, t, toast, formatBytes, errorText, operationError, runPathAction } from "./ui.js";
+import { lyricsNowPlaying, lyricsSearch, stopLyricsSync } from "./lyrics.js";
 
 const SUPPORTED_LANGS = ["en", "tr", "de", "es", "fr", "ru", "ja"];
 
@@ -29,20 +32,7 @@ const state = {
   taskId: null,
   dlTaskId: null,
   player: null,
-  lyricsSync: null,
 };
-
-const taskWaiters = new Map();
-
-// ---------- Toast ----------
-let toastTimer = null;
-function toast(msg, type = "") {
-  const el = $("#toast");
-  el.textContent = msg;
-  el.className = "toast show" + (type ? " " + type : "");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (el.className = "toast"), 3000);
-}
 
 // ---------- Init ----------
 async function init() {
@@ -65,6 +55,8 @@ async function init() {
   await refreshModels();
   await refreshHistory();
   bindUI();
+  initTags();
+  await initStudio();
   $("#sel-language").value = lang;
   $("#sel-theme").value = ["light", "dark", "system"].includes(state.settings.theme)
     ? state.settings.theme
@@ -428,24 +420,6 @@ async function startSeparation() {
   }
 }
 
-function waitForTask(kind, taskId) {
-  return new Promise((resolve) => {
-    taskWaiters.set(`${kind}:${taskId}`, resolve);
-  });
-}
-
-function settleTask(kind, payload, status) {
-  const key = `${kind}:${payload.task_id}`;
-  const resolve = taskWaiters.get(key);
-  if (!resolve) return;
-  taskWaiters.delete(key);
-  resolve({ status, payload });
-}
-
-function dropTaskWaiter(kind, taskId) {
-  taskWaiters.delete(`${kind}:${taskId}`);
-}
-
 function cancelSeparation() {
   if (state.taskId) {
     invoke("cancel_separation", { taskId: state.taskId })
@@ -570,203 +544,13 @@ function setDlProgress(pct) {
   $("#dl-progress-label").textContent = p + "%";
 }
 
-// ---------- Lyrics ----------
-async function lyricsNowPlaying() {
-  stopLyricsSync();
-  const results = $("#lyrics-results");
-  results.innerHTML = `<span class="muted">${t("lyrics.loading")}</span>`;
-  let np;
-  try {
-    np = await invoke("get_now_playing");
-  } catch (error) {
-    results.innerHTML = "";
-    toast(errorText(error, "lyrics.error"), "error");
-    return;
-  }
-  const box = $("#lyrics-nowplaying");
-  if (!np) {
-    box.classList.remove("hidden");
-    box.innerHTML = `<span class="muted">${t("lyrics.nothingPlaying")}</span>`;
-    results.innerHTML = "";
-    return;
-  }
-  box.classList.remove("hidden");
-  box.innerHTML = `
-    <div class="artwork">${escapeHtml((np.track || "♪").charAt(0).toUpperCase())}</div>
-    <div>
-      <div class="np-title">${escapeHtml(np.track)}</div>
-      <div class="np-artist">${escapeHtml(np.artist)}</div>
-    </div>`;
-  try {
-    const lyrics = await invoke("get_lyrics", {
-      track: np.track,
-      artist: np.artist,
-      album: np.album,
-      duration: np.duration,
-    });
-    const rendered = renderLyricsResult(results, lyrics, np.track, np.artist);
-    if (lyrics?.synced_lyrics && rendered) startLyricsSync(np, rendered);
-  } catch (error) {
-    results.innerHTML = `<span class="muted">${t("lyrics.error")}</span>`;
-    toast(errorText(error, "lyrics.error"), "error");
-  }
-}
-
-async function lyricsSearch() {
-  stopLyricsSync();
-  const q = $("#lyrics-search").value.trim();
-  if (!q) return;
-  const wrap = $("#lyrics-results");
-  wrap.innerHTML = `<span class="muted">${t("lyrics.loading")}</span>`;
-  try {
-    const results = await invoke("search_lyrics", { query: q });
-    wrap.innerHTML = "";
-    if (!results.length) {
-      wrap.innerHTML = `<span class="muted">${t("lyrics.notfound")}</span>`;
-      return;
-    }
-    for (const r of results.slice(0, 6)) {
-      renderLyricsResult(wrap, r, r.track_name, r.artist_name, true);
-    }
-  } catch (error) {
-    wrap.innerHTML = `<span class="muted">${t("lyrics.error")}</span>`;
-    toast(errorText(error, "lyrics.error"), "error");
-  }
-}
-
-function renderLyricsResult(container, lyrics, track, artist, append = false) {
-  if (!append) container.innerHTML = "";
-  if (!lyrics) {
-    if (!append) container.innerHTML = `<span class="muted">${t("lyrics.notfound")}</span>`;
-    return null;
-  }
-
-  const card = document.createElement("div");
-  card.className = "lyrics-card";
-  const head = document.createElement("div");
-  head.className = "lc-head";
-  const title = document.createElement("span");
-  title.className = "lc-title";
-  title.textContent = lyrics.track_name || track || "";
-  const art = document.createElement("span");
-  art.className = "lc-artist";
-  art.textContent = lyrics.artist_name || artist || "";
-  head.appendChild(title);
-  head.appendChild(art);
-  card.appendChild(head);
-
-  const body = document.createElement("div");
-  body.className = "lyrics-body";
-  if (lyrics.instrumental) {
-    body.textContent = t("lyrics.instrumental");
-  } else if (lyrics.synced_lyrics) {
-    for (const line of parseLrc(lyrics.synced_lyrics)) {
-      const el = document.createElement("div");
-      el.className = "lyric-line";
-      el.textContent = line.text;
-      if (line.time != null) el.dataset.time = String(line.time);
-      body.appendChild(el);
-    }
-  } else if (lyrics.plain_lyrics) {
-    body.textContent = lyrics.plain_lyrics;
-  } else {
-    body.textContent = t("lyrics.notfound");
-  }
-  card.appendChild(body);
-  container.appendChild(card);
-  return body;
-}
-
-function parseLrc(synced) {
-  const lines = [];
-  const offsetMatch = synced.match(/^\[offset:([+-]?\d+)\]$/im);
-  const offset = offsetMatch ? Number(offsetMatch[1]) / 1000 : 0;
-  const timestamp = /\[(\d{1,3}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
-  for (const raw of synced.split("\n")) {
-    const matches = Array.from(raw.matchAll(timestamp));
-    if (matches.length) {
-      const text = raw.replace(timestamp, "").trim();
-      if (!text) continue;
-      for (const match of matches) {
-        const time = parseInt(match[1], 10) * 60 + parseFloat(match[2].replace(",", ".")) + offset;
-        lines.push({ time: Math.max(0, time), text });
-      }
-    } else if (raw.trim() && !/^\[[a-z]+:/i.test(raw.trim())) {
-      lines.push({ time: null, text: raw.trim() });
-    }
-  }
-  return lines.filter((line) => line.text).sort((a, b) => (a.time ?? Infinity) - (b.time ?? Infinity));
-}
-
-function startLyricsSync(nowPlaying, body) {
-  const trackKey = `${nowPlaying.track}\n${nowPlaying.artist}`;
-  const sync = {
-    body,
-    trackKey,
-    anchorPosition: Math.max(0, Number(nowPlaying.position) || 0),
-    anchorTime: performance.now(),
-    playing: Boolean(nowPlaying.playing),
-    activeIndex: -1,
-    refreshing: false,
-    lastRefresh: performance.now(),
-    timer: null,
-  };
-
-  const tick = async () => {
-    if (state.lyricsSync !== sync || !document.body.contains(body)) return;
-    const now = performance.now();
-    const position = sync.anchorPosition + (sync.playing ? (now - sync.anchorTime) / 1000 : 0);
-    const lines = Array.from(body.querySelectorAll(".lyric-line[data-time]"));
-    let activeIndex = -1;
-    for (let index = 0; index < lines.length; index++) {
-      if (Number(lines[index].dataset.time) <= position + 0.08) activeIndex = index;
-      else break;
-    }
-    if (activeIndex !== sync.activeIndex) {
-      lines[sync.activeIndex]?.classList.remove("active");
-      const active = lines[activeIndex];
-      active?.classList.add("active");
-      active?.scrollIntoView({ block: "center", behavior: "smooth" });
-      sync.activeIndex = activeIndex;
-    }
-
-    if (!sync.refreshing && now - sync.lastRefresh >= 5000) {
-      sync.refreshing = true;
-      sync.lastRefresh = now;
-      try {
-        const current = await invoke("get_now_playing");
-        if (!current || `${current.track}\n${current.artist}` !== sync.trackKey) {
-          stopLyricsSync();
-          return;
-        }
-        sync.anchorPosition = Math.max(0, Number(current.position) || 0);
-        sync.anchorTime = performance.now();
-        sync.playing = Boolean(current.playing);
-      } catch {
-        // Keep the local clock running; the next refresh may recover.
-      } finally {
-        sync.refreshing = false;
-      }
-    }
-  };
-
-  sync.timer = window.setInterval(tick, 250);
-  state.lyricsSync = sync;
-  tick();
-}
-
-function stopLyricsSync() {
-  if (!state.lyricsSync) return;
-  window.clearInterval(state.lyricsSync.timer);
-  state.lyricsSync = null;
-}
-
 // ---------- Settings ----------
 async function saveSettings(patch) {
   state.settings = { ...state.settings, ...patch };
   if (patch.language) {
     await i18n.setLanguage(patch.language);
     await Promise.all([refreshModels(), refreshHistory()]);
+    await refreshStudio();
     renderOutputDirs();
   }
   if (patch.theme) theme.setMode(patch.theme);
@@ -778,63 +562,11 @@ async function saveSettings(patch) {
 }
 
 // ---------- Helpers ----------
-function formatBytes(n) {
-  if (!n) return "—";
-  const units = ["B", "KB", "MB", "GB"];
-  let i = 0;
-  let v = n;
-  while (v >= 1024 && i < units.length - 1) {
-    v /= 1024;
-    i++;
-  }
-  return v.toFixed(v < 10 ? 1 : 0) + " " + units[i];
-}
-
 function fmtDuration(s) {
   if (!s) return "";
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
   return `${m}:${String(sec).padStart(2, "0")}`;
-}
-
-function escapeHtml(s) {
-  return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-function errorText(error, fallbackKey) {
-  const raw = String(error?.message || error || "");
-  const code = raw.match(/HALITE_[A-Z_]+/)?.[0];
-  const byCode = {
-    HALITE_AGE_RESTRICTED: "download.ageRestricted",
-    HALITE_AUTH_REQUIRED: "download.authRequired",
-    HALITE_HELPER_SETUP: "download.helperFailed",
-    HALITE_DOWNLOAD_FAILED: "download.error",
-    HALITE_OUTPUT_MISSING: "download.outputMissing",
-    HALITE_INVALID_URL: "download.invalidUrl",
-    HALITE_JS_RUNTIME_REQUIRED: "download.jsRuntimeRequired",
-    HALITE_MODEL_MISSING: "separate.modelMissing",
-    HALITE_INVALID_TRIM: "separate.invalidTrim",
-    HALITE_INVALID_AUDIO: "separate.invalidAudio",
-    HALITE_PREVIEW_DENIED: "common.previewError",
-    HALITE_OUTPUT: "common.outputError",
-    HALITE_OPEN_FAILED: "common.openError",
-    HALITE_FFMPEG_SETUP: "common.audioConverterError",
-    HALITE_FFMPEG_FAILED: "common.audioConverterError",
-  };
-  return t(byCode[code] || fallbackKey || "common.unexpected");
-}
-
-function operationError(prefixKey, error) {
-  const prefix = t(prefixKey);
-  const detail = errorText(error, "common.unexpected");
-  return detail === prefix ? prefix : `${prefix}: ${detail}`;
-}
-
-function runPathAction(command, path) {
-  if (!path) return;
-  invoke(command, { path }).catch((error) => {
-    toast(errorText(error, "common.openError"), "error");
-  });
 }
 
 // ---------- Backend events (global, e.g. drag-drop) ----------

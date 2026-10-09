@@ -40,7 +40,7 @@ export const i18n = {
   },
 
   t(key, vars) {
-    let str = getByPath(this.data, key) ?? getByPath(this.fallback, key) ?? key;
+    let str = getByPath(this.data, key) ?? getByPath(this.fallback, key) ?? getByPath(this.fallback, "common.unexpected") ?? "Unavailable";
     if (vars && typeof vars === "object") {
       for (const [k, v] of Object.entries(vars)) {
         str = str.replaceAll(`{${k}}`, String(v));
@@ -56,6 +56,9 @@ export const i18n = {
     });
     scope.querySelectorAll("[data-i18n-ph]").forEach((el) => {
       el.setAttribute("placeholder", this.t(el.getAttribute("data-i18n-ph")));
+    });
+    scope.querySelectorAll("[data-i18n-alt]").forEach((el) => {
+      el.setAttribute("alt", this.t(el.getAttribute("data-i18n-alt")));
     });
   },
 };

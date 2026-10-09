@@ -12,8 +12,10 @@
     "generate-locales": "node scripts/generate-locales.mjs",
     "check-locales": "node scripts/generate-locales.mjs --check",
     "check-js": "node scripts/check-javascript.mjs",
+    "test": "node --test tests/*.test.mjs",
     "fetch-models": "node scripts/fetch-models.mjs",
-    "prepare-assets": "npm run generate-locales && npm run fetch-models"
+    "prepare-assets": "npm run generate-locales && npm run fetch-models",
+    "release-inventory": "node scripts/release-inventory.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"
