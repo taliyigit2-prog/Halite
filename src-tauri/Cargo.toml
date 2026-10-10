@@ -28,7 +28,7 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 base64 = "0.22"
 
 # Audio decoding
-symphonia = { version = "0.5", features = ["mp3", "aac", "flac", "vorbis", "isomp4", "ogg", "wav", "pcm"] }
+symphonia = { version = "0.6", features = ["mp3", "aac", "flac", "vorbis", "isomp4", "ogg", "wav", "pcm"] }
 
 # WAV encoding
 hound = "3"
