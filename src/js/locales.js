@@ -23,7 +23,8 @@
       "outputError": "Der Ausgabeordner konnte nicht verwendet werden",
       "openError": "Die Datei oder der Ordner konnte nicht geöffnet werden",
       "audioConverterError": "Der Audiokonverter konnte nicht vorbereitet werden",
-      "continue": "Weiter"
+      "continue": "Weiter",
+      "aiBusy": "Eine KI-Aufgabe läuft bereits. Warten oder abbrechen."
     },
     "separate": {
       "title": "Stem-Trennung",
@@ -249,7 +250,8 @@
       "outputError": "The output folder could not be used",
       "openError": "The file or folder could not be opened",
       "audioConverterError": "The audio converter could not be prepared",
-      "continue": "Continue"
+      "continue": "Continue",
+      "aiBusy": "An AI task is already running. Wait for it to finish or cancel it."
     },
     "separate": {
       "title": "Stem Separation",
@@ -475,7 +477,8 @@
       "outputError": "No se pudo usar la carpeta de salida",
       "openError": "No se pudo abrir el archivo o la carpeta",
       "audioConverterError": "No se pudo preparar el conversor de audio",
-      "continue": "Continuar"
+      "continue": "Continuar",
+      "aiBusy": "Ya hay una tarea de IA en curso. Espera o cancélala."
     },
     "separate": {
       "title": "Separación de pistas",
@@ -701,7 +704,8 @@
       "outputError": "Le dossier de sortie n'a pas pu être utilisé",
       "openError": "Impossible d'ouvrir le fichier ou le dossier",
       "audioConverterError": "Le convertisseur audio n'a pas pu être préparé",
-      "continue": "Continuer"
+      "continue": "Continuer",
+      "aiBusy": "Une tâche IA est déjà en cours. Attendez ou annulez-la."
     },
     "separate": {
       "title": "Séparation des pistes",
@@ -927,7 +931,8 @@
       "outputError": "出力フォルダーを使用できませんでした",
       "openError": "ファイルまたはフォルダーを開けませんでした",
       "audioConverterError": "音声変換機能を準備できませんでした",
-      "continue": "続ける"
+      "continue": "続ける",
+      "aiBusy": "AI 処理が実行中です。完了を待つかキャンセルしてください。"
     },
     "separate": {
       "title": "ステム分離",
@@ -1153,7 +1158,8 @@
       "outputError": "Не удалось использовать папку вывода",
       "openError": "Не удалось открыть файл или папку",
       "audioConverterError": "Не удалось подготовить аудиоконвертер",
-      "continue": "Продолжить"
+      "continue": "Продолжить",
+      "aiBusy": "Задача ИИ уже выполняется. Дождитесь завершения или отмените её."
     },
     "separate": {
       "title": "Разделение дорожек",
@@ -1379,7 +1385,8 @@
       "outputError": "Çıktı klasörü kullanılamadı",
       "openError": "Dosya veya klasör açılamadı",
       "audioConverterError": "Ses dönüştürücü hazırlanamadı",
-      "continue": "Devam et"
+      "continue": "Devam et",
+      "aiBusy": "Bir yapay zekâ işlemi sürüyor. Tamamlanmasını bekleyin veya iptal edin."
     },
     "separate": {
       "title": "Stem Ayrıştırma",

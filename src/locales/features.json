@@ -1,7 +1,7 @@
 {
   "en": {
     "nav": { "tags": "Tags", "studio": "Voice Studio" },
-    "common": { "continue": "Continue" },
+    "common": { "continue": "Continue", "aiBusy": "An AI task is already running. Wait for it to finish or cancel it." },
     "tags": {
       "title": "Tag Editor", "subtitle": "Organize your music with local metadata, artwork and lyrics.",
       "clear": "Clear selection", "selected": "{count} selected", "multiple": "Multiple values — unchanged unless edited",
@@ -33,7 +33,7 @@
     }
   },
   "tr": {
-    "nav": { "tags": "Etiketler", "studio": "Ses Stüdyosu" }, "common": { "continue": "Devam et" },
+    "nav": { "tags": "Etiketler", "studio": "Ses Stüdyosu" }, "common": { "continue": "Devam et", "aiBusy": "Bir yapay zekâ işlemi sürüyor. Tamamlanmasını bekleyin veya iptal edin." },
     "tags": {
       "title": "Etiket Düzenleyici", "subtitle": "Müziklerinizi yerel etiketler, kapaklar ve şarkı sözleriyle düzenleyin.",
       "clear": "Seçimi temizle", "selected": "{count} dosya seçili", "multiple": "Birden fazla değer — düzenlenmedikçe korunur",
@@ -61,7 +61,7 @@
     }
   },
   "de": {
-    "nav": { "tags": "Tags", "studio": "Sprachstudio" }, "common": { "continue": "Weiter" },
+    "nav": { "tags": "Tags", "studio": "Sprachstudio" }, "common": { "continue": "Weiter", "aiBusy": "Eine KI-Aufgabe läuft bereits. Warten oder abbrechen." },
     "tags": {
       "title": "Tag-Editor", "subtitle": "Musik lokal mit Metadaten, Coverbildern und Liedtexten organisieren.", "clear": "Auswahl leeren", "selected": "{count} ausgewählt", "multiple": "Mehrere Werte — bleiben ohne Bearbeitung erhalten",
       "cover": "Coverbild", "coverPresent": "{count} eingebettete Bilder", "noCover": "Kein Cover eingebettet", "chooseCover": "Cover wählen", "removeCover": "Frontcover entfernen", "replaceCover": "Frontcover ersetzen", "exportCover": "Cover exportieren",
@@ -78,7 +78,7 @@
     }
   },
   "es": {
-    "nav": { "tags": "Etiquetas", "studio": "Estudio de voz" }, "common": { "continue": "Continuar" },
+    "nav": { "tags": "Etiquetas", "studio": "Estudio de voz" }, "common": { "continue": "Continuar", "aiBusy": "Ya hay una tarea de IA en curso. Espera o cancélala." },
     "tags": {
       "title": "Editor de etiquetas", "subtitle": "Organiza tu música con metadatos, portadas y letras locales.", "clear": "Limpiar selección", "selected": "{count} seleccionados", "multiple": "Varios valores — se conservan si no se editan", "cover": "Portada", "coverPresent": "{count} imágenes incrustadas", "noCover": "Sin portada incrustada", "chooseCover": "Elegir portada", "removeCover": "Eliminar portada frontal", "replaceCover": "Reemplazar portada frontal", "exportCover": "Exportar portada", "search": "Buscar en MusicBrainz", "searchPlaceholder": "Artista, canción o álbum…", "network": "Consulta en línea opcional. Tu audio nunca se sube.", "save": "Revisar y guardar", "restore": "Restaurar última copia", "backup": "Se conserva una copia .halite-backup junto a cada archivo editado. Guárdala hasta revisar los cambios.", "saving": "Guardando de forma segura…", "confirmTitle": "Revisar cambios", "confirmSave": "¿Aplicar estos cambios a {count} archivos? Los campos sin editar se conservan.", "clearValue": "Eliminar valor", "noChanges": "No hay cambios", "saved": "Etiquetas guardadas", "partial": "No se pudieron guardar {count} archivos. Consulta los detalles.", "error": "Error de metadatos. Comprueba formato, permisos y espacio libre.", "changed": "El archivo cambió fuera de Halite. Selecciónalo de nuevo.", "restoreConfirm": "¿Reemplazar el archivo con su última copia de Halite?", "restored": "Copia restaurada", "matchApplied": "Coincidencia aplicada. Revisa antes de guardar.", "noMatches": "Sin coincidencias", "searchError": "MusicBrainz no está disponible. Puedes seguir editando localmente.",
       "fields": { "title": "Título", "artist": "Artista", "album": "Álbum", "album_artist": "Artista del álbum", "genre": "Género", "date": "Fecha / año", "track": "Número de pista", "track_total": "Total de pistas", "disc": "Número de disco", "disc_total": "Total de discos", "composer": "Compositor", "copyright": "Derechos de autor", "comment": "Comentario", "lyrics": "Letra incrustada" }
@@ -89,7 +89,7 @@
     }
   },
   "fr": {
-    "nav": { "tags": "Métadonnées", "studio": "Studio vocal" }, "common": { "continue": "Continuer" },
+    "nav": { "tags": "Métadonnées", "studio": "Studio vocal" }, "common": { "continue": "Continuer", "aiBusy": "Une tâche IA est déjà en cours. Attendez ou annulez-la." },
     "tags": {
       "title": "Éditeur de métadonnées", "subtitle": "Organisez votre musique avec des métadonnées, pochettes et paroles locales.", "clear": "Effacer la sélection", "selected": "{count} sélectionnés", "multiple": "Valeurs multiples — conservées sans modification", "cover": "Pochette", "coverPresent": "{count} images intégrées", "noCover": "Aucune pochette intégrée", "chooseCover": "Choisir une pochette", "removeCover": "Retirer la pochette avant", "replaceCover": "Remplacer la pochette avant", "exportCover": "Exporter la pochette", "search": "Recherche MusicBrainz", "searchPlaceholder": "Artiste, titre ou album…", "network": "Recherche en ligne facultative. Votre audio n'est jamais envoyé.", "save": "Vérifier et enregistrer", "restore": "Restaurer la dernière copie", "backup": "Une copie .halite-backup est conservée à côté de chaque fichier modifié. Gardez-la jusqu'à vérification.", "saving": "Enregistrement sécurisé…", "confirmTitle": "Vérifier les modifications", "confirmSave": "Appliquer les modifications à {count} fichiers ? Les champs non modifiés sont conservés.", "clearValue": "Supprimer la valeur", "noChanges": "Aucune modification", "saved": "Métadonnées enregistrées", "partial": "{count} fichiers n'ont pas pu être enregistrés. Voir les détails.", "error": "Échec des métadonnées. Vérifiez le format, les droits et l'espace disque.", "changed": "Fichier modifié hors de Halite. Sélectionnez-le à nouveau.", "restoreConfirm": "Remplacer le fichier par sa dernière sauvegarde Halite ?", "restored": "Sauvegarde restaurée", "matchApplied": "Résultat appliqué. Vérifiez avant d'enregistrer.", "noMatches": "Aucun résultat", "searchError": "MusicBrainz est inaccessible. L'édition locale reste disponible.",
       "fields": { "title": "Titre", "artist": "Artiste", "album": "Album", "album_artist": "Artiste de l'album", "genre": "Genre", "date": "Date / année", "track": "Numéro de piste", "track_total": "Nombre de pistes", "disc": "Numéro de disque", "disc_total": "Nombre de disques", "composer": "Compositeur", "copyright": "Droits d'auteur", "comment": "Commentaire", "lyrics": "Paroles intégrées" }
@@ -100,7 +100,7 @@
     }
   },
   "ru": {
-    "nav": { "tags": "Теги", "studio": "Студия голоса" }, "common": { "continue": "Продолжить" },
+    "nav": { "tags": "Теги", "studio": "Студия голоса" }, "common": { "continue": "Продолжить", "aiBusy": "Задача ИИ уже выполняется. Дождитесь завершения или отмените её." },
     "tags": {
       "title": "Редактор тегов", "subtitle": "Упорядочивайте музыку с помощью локальных тегов, обложек и текстов.", "clear": "Очистить выбор", "selected": "Выбрано: {count}", "multiple": "Разные значения — сохраняются без правки", "cover": "Обложка", "coverPresent": "Встроенных изображений: {count}", "noCover": "Нет встроенной обложки", "chooseCover": "Выбрать обложку", "removeCover": "Удалить переднюю обложку", "replaceCover": "Заменить переднюю обложку", "exportCover": "Экспорт обложки", "search": "Поиск MusicBrainz", "searchPlaceholder": "Исполнитель, песня или альбом…", "network": "Необязательный онлайн-поиск. Аудио не загружается.", "save": "Проверить и сохранить", "restore": "Восстановить последнюю копию", "backup": "Рядом с каждым файлом хранится копия .halite-backup. Сохраните её до проверки изменений.", "saving": "Безопасное сохранение…", "confirmTitle": "Проверка изменений", "confirmSave": "Применить изменения к {count} файлам? Неизменённые поля сохранятся.", "clearValue": "Удалить значение", "noChanges": "Нет изменений", "saved": "Теги сохранены", "partial": "Не сохранено файлов: {count}. Подробности ниже.", "error": "Ошибка тегов. Проверьте формат, права и свободное место.", "changed": "Файл изменён вне Halite. Выберите его снова.", "restoreConfirm": "Заменить файл последней резервной копией Halite?", "restored": "Копия восстановлена", "matchApplied": "Результат применён. Проверьте перед сохранением.", "noMatches": "Совпадений нет", "searchError": "MusicBrainz недоступен. Локальное редактирование работает.",
       "fields": { "title": "Название", "artist": "Исполнитель", "album": "Альбом", "album_artist": "Исполнитель альбома", "genre": "Жанр", "date": "Дата / год", "track": "Номер трека", "track_total": "Всего треков", "disc": "Номер диска", "disc_total": "Всего дисков", "composer": "Композитор", "copyright": "Авторские права", "comment": "Комментарий", "lyrics": "Встроенный текст" }
@@ -111,7 +111,7 @@
     }
   },
   "ja": {
-    "nav": { "tags": "タグ", "studio": "音声スタジオ" }, "common": { "continue": "続ける" },
+    "nav": { "tags": "タグ", "studio": "音声スタジオ" }, "common": { "continue": "続ける", "aiBusy": "AI 処理が実行中です。完了を待つかキャンセルしてください。" },
     "tags": {
       "title": "タグエディター", "subtitle": "ローカルのメタデータ、ジャケット、歌詞で音楽を整理。", "clear": "選択をクリア", "selected": "{count} 件選択", "multiple": "複数の値 — 編集しなければ保持", "cover": "ジャケット画像", "coverPresent": "埋め込み画像 {count} 件", "noCover": "埋め込みジャケットなし", "chooseCover": "画像を選択", "removeCover": "表紙画像を削除", "replaceCover": "表紙画像を置換", "exportCover": "画像を書き出す", "search": "MusicBrainz 検索", "searchPlaceholder": "アーティスト、曲名、アルバム…", "network": "任意のオンライン検索。音声はアップロードされません。", "save": "確認して保存", "restore": "直前のバックアップを復元", "backup": "各編集ファイルの隣に .halite-backup を保存します。変更確認まで保管してください。", "saving": "安全に保存中…", "confirmTitle": "変更を確認", "confirmSave": "{count} 件に変更を適用しますか？編集していない項目は保持されます。", "clearValue": "値を削除", "noChanges": "変更はありません", "saved": "タグを保存しました", "partial": "{count} 件を保存できませんでした。詳細を確認してください。", "error": "メタデータ操作に失敗しました。形式、権限、空き容量を確認してください。", "changed": "ファイルが外部で変更されました。再度選択してください。", "restoreConfirm": "直前の Halite バックアップで置き換えますか？", "restored": "バックアップを復元しました", "matchApplied": "結果を反映しました。保存前に確認してください。", "noMatches": "一致する結果なし", "searchError": "MusicBrainz に接続できません。ローカル編集は利用できます。",
       "fields": { "title": "タイトル", "artist": "アーティスト", "album": "アルバム", "album_artist": "アルバムアーティスト", "genre": "ジャンル", "date": "日付 / 年", "track": "曲番号", "track_total": "総曲数", "disc": "ディスク番号", "disc_total": "総ディスク数", "composer": "作曲者", "copyright": "著作権", "comment": "コメント", "lyrics": "埋め込み歌詞" }

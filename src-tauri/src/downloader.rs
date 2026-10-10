@@ -193,11 +193,7 @@ fn js_runtime_arg() -> Option<String> {
             ("bun", &["bun.exe"]),
         ]
     } else {
-        &[
-            ("deno", &["deno"]),
-            ("node", &["node"]),
-            ("bun", &["bun"]),
-        ]
+        &[("deno", &["deno"]), ("node", &["node"]), ("bun", &["bun"])]
     };
     candidates.iter().find_map(|(kind, names)| {
         executable_on_path(names).map(|path| format!("{kind}:{}", path.to_string_lossy()))
@@ -205,8 +201,8 @@ fn js_runtime_arg() -> Option<String> {
 }
 
 fn validate_request(url: &str, format: &str) -> Result<()> {
-    let parsed = reqwest::Url::parse(url)
-        .map_err(|_| Error::Message("HALITE_INVALID_URL".to_string()))?;
+    let parsed =
+        reqwest::Url::parse(url).map_err(|_| Error::Message("HALITE_INVALID_URL".to_string()))?;
     if !matches!(parsed.scheme(), "http" | "https") || parsed.host_str().is_none() {
         return Err(Error::Message("HALITE_INVALID_URL".to_string()));
     }
@@ -237,9 +233,7 @@ fn classify_ytdlp_error(stderr: &str, code: Option<i32>) -> Error {
         .or_else(|| stderr.lines().rev().find(|line| !line.trim().is_empty()))
         .unwrap_or("yt-dlp failed")
         .trim();
-    Error::Message(format!(
-        "HALITE_DOWNLOAD_FAILED|exit={code:?}|{detail}"
-    ))
+    Error::Message(format!("HALITE_DOWNLOAD_FAILED|exit={code:?}|{detail}"))
 }
 
 fn handle_stdout_line(
@@ -317,8 +311,7 @@ pub fn download(
 
     let temp_dir = data_dir.join("tmp").join(format!("download-{task_id}"));
     let _ = std::fs::remove_dir_all(&temp_dir);
-    std::fs::create_dir_all(&temp_dir)
-        .map_err(|e| Error::Message(format!("HALITE_OUTPUT|{e}")))?;
+    std::fs::create_dir_all(&temp_dir).map_err(|e| Error::Message(format!("HALITE_OUTPUT|{e}")))?;
     let _temp_guard = DownloadTempGuard(temp_dir.clone());
 
     let output_template = output_dir.join("%(title).180B [%(id)s].%(ext)s");
@@ -389,7 +382,10 @@ pub fn download(
 
     let (line_tx, line_rx) = mpsc::channel();
     let stdout_thread = std::thread::spawn(move || {
-        for line in BufReader::new(stdout).lines().map_while(std::result::Result::ok) {
+        for line in BufReader::new(stdout)
+            .lines()
+            .map_while(std::result::Result::ok)
+        {
             if line_tx.send(line).is_err() {
                 break;
             }
@@ -448,7 +444,9 @@ pub fn download(
         .canonicalize()
         .map_err(|e| Error::Message(format!("HALITE_OUTPUT|{e}")))?;
     if !canonical_file.starts_with(&canonical_output) {
-        return Err(Error::Message("HALITE_OUTPUT|unexpected output path".to_string()));
+        return Err(Error::Message(
+            "HALITE_OUTPUT|unexpected output path".to_string(),
+        ));
     }
 
     let ext = path

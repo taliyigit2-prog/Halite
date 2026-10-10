@@ -83,12 +83,24 @@ pub async fn separate(
     options: SeparateOptions,
 ) -> Result<TaskStarted> {
     validate_task_id(&task_id)?;
+    state
+        .ai_busy
+        .compare_exchange(
+            false,
+            true,
+            std::sync::atomic::Ordering::SeqCst,
+            std::sync::atomic::Ordering::SeqCst,
+        )
+        .map_err(|_| Error::Message("HALITE_AI_BUSY".into()))?;
     let state = state.inner().clone();
     let cancel = state.cancel_flag(&task_id);
     let return_task_id = task_id.clone();
 
     tauri::async_runtime::spawn_blocking(move || {
         let result = run_separation(&state, &options, &cancel, &task_id, &app);
+        state
+            .ai_busy
+            .store(false, std::sync::atomic::Ordering::SeqCst);
         state.clear_cancel(&task_id);
         match result {
             Ok(job_id) => {
@@ -98,15 +110,29 @@ pub async fn separate(
             Err(e) => {
                 let msg = e.to_string();
                 if msg.contains("HALITE_CANCELLED") {
-                    let _ = app.emit("separation://cancelled", ErrorPayload { task_id, message: msg });
+                    let _ = app.emit(
+                        "separation://cancelled",
+                        ErrorPayload {
+                            task_id,
+                            message: msg,
+                        },
+                    );
                 } else {
-                    let _ = app.emit("separation://error", ErrorPayload { task_id, message: msg });
+                    let _ = app.emit(
+                        "separation://error",
+                        ErrorPayload {
+                            task_id,
+                            message: msg,
+                        },
+                    );
                 }
             }
         }
     });
 
-    Ok(TaskStarted { task_id: return_task_id })
+    Ok(TaskStarted {
+        task_id: return_task_id,
+    })
 }
 
 fn run_separation(
@@ -118,7 +144,9 @@ fn run_separation(
 ) -> Result<i64> {
     let source = std::path::Path::new(&options.source_path);
     if !source.is_file() {
-        return Err(Error::Message("HALITE_INVALID_AUDIO|file not found".to_string()));
+        return Err(Error::Message(
+            "HALITE_INVALID_AUDIO|file not found".to_string(),
+        ));
     }
     let source_name = source
         .file_name()
@@ -149,9 +177,8 @@ fn run_separation(
         }
     }
 
-    let output_root = std::path::PathBuf::from(
-        options.output_dir.clone().unwrap_or_else(downloads_dir),
-    );
+    let output_root =
+        std::path::PathBuf::from(options.output_dir.clone().unwrap_or_else(downloads_dir));
     std::fs::create_dir_all(&output_root)
         .map_err(|e| Error::Message(format!("HALITE_OUTPUT|{e}")))?;
     if !output_root.is_dir() {
@@ -172,14 +199,11 @@ fn run_separation(
     let (samples, rate) = crate::audio::decode_to_stereo(source)
         .map_err(|error| Error::Message(format!("HALITE_INVALID_AUDIO|{error}")))?;
     let samples = crate::audio::resample_stereo(&samples, rate, SAMPLE_RATE);
-    let samples = crate::audio::trim_stereo(
-        &samples,
-        SAMPLE_RATE,
-        start_sec,
-        options.end_sec,
-    );
+    let samples = crate::audio::trim_stereo(&samples, SAMPLE_RATE, start_sec, options.end_sec);
     if samples.len() < 2 {
-        return Err(Error::Message("HALITE_INVALID_TRIM|empty audio".to_string()));
+        return Err(Error::Message(
+            "HALITE_INVALID_TRIM|empty audio".to_string(),
+        ));
     }
 
     let duration_secs = (samples.len() / 2) as f64 / SAMPLE_RATE as f64;
@@ -232,7 +256,9 @@ fn run_separation(
             return Err(Error::Message("HALITE_CANCELLED".to_string()));
         }
 
-        let bytes = std::fs::metadata(&final_path).map(|m| m.len() as i64).unwrap_or(0);
+        let bytes = std::fs::metadata(&final_path)
+            .map(|m| m.len() as i64)
+            .unwrap_or(0);
         written.push((stem_name, final_path.to_string_lossy().to_string(), bytes));
         let _ = app.emit(
             "separation://progress",
@@ -288,7 +314,8 @@ fn safe_file_component(value: &str) -> String {
     let cleaned: String = value
         .chars()
         .map(|ch| {
-            if ch.is_control() || matches!(ch, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') {
+            if ch.is_control() || matches!(ch, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|')
+            {
                 '_'
             } else {
                 ch
@@ -331,24 +358,26 @@ fn interleave(l: &[f32], r: &[f32]) -> Vec<f32> {
 fn build_outputs(stems: &[[Vec<f32>; 2]], mode: &str) -> Vec<(String, Vec<f32>)> {
     let sources = crate::separation::demucs::SOURCES;
     match mode {
-        "vocals" => vec![(
-            "vocals".to_string(),
-            interleave(&stems[3][0], &stems[3][1]),
-        )],
+        "vocals" => vec![("vocals".to_string(), interleave(&stems[3][0], &stems[3][1]))],
         "instrumental" => {
             let n = stems[0][0].len();
             let mut l = vec![0f32; n];
             let mut r = vec![0f32; n];
-            for i in 0..3 {
+            for stem in stems.iter().take(3) {
                 for j in 0..n {
-                    l[j] += stems[i][0][j];
-                    r[j] += stems[i][1][j];
+                    l[j] += stem[0][j];
+                    r[j] += stem[1][j];
                 }
             }
             vec![("instrumental".to_string(), interleave(&l, &r))]
         }
         _ => (0..4)
-            .map(|i| (sources[i].to_string(), interleave(&stems[i][0], &stems[i][1])))
+            .map(|i| {
+                (
+                    sources[i].to_string(),
+                    interleave(&stems[i][0], &stems[i][1]),
+                )
+            })
             .collect(),
     }
 }
@@ -386,7 +415,10 @@ pub async fn pick_audio_files(app: AppHandle) -> Option<Vec<String>> {
     let files = app
         .dialog()
         .file()
-        .add_filter("Audio", &["mp3", "wav", "flac", "m4a", "ogg", "aac", "aiff", "mp4"])
+        .add_filter(
+            "Audio",
+            &["mp3", "wav", "flac", "m4a", "ogg", "aac", "aiff", "mp4"],
+        )
         .blocking_pick_files();
     files.map(|fs| {
         fs.into_iter()
@@ -428,9 +460,14 @@ pub fn reveal_path(path: String) -> Result<()> {
         return Err(Error::Message("HALITE_OUTPUT_MISSING".to_string()));
     }
     #[cfg(target_os = "macos")]
-    let result = std::process::Command::new("open").arg("-R").arg(&path).spawn();
+    let result = std::process::Command::new("open")
+        .arg("-R")
+        .arg(&path)
+        .spawn();
     #[cfg(target_os = "windows")]
-    let result = std::process::Command::new("explorer").arg(format!("/select,{path}")).spawn();
+    let result = std::process::Command::new("explorer")
+        .arg(format!("/select,{path}"))
+        .spawn();
     #[cfg(target_os = "linux")]
     let result = {
         if let Some(parent) = std::path::Path::new(&path).parent() {
@@ -497,7 +534,10 @@ pub async fn download(
                 move |pct| {
                     let _ = app.emit(
                         "download://progress",
-                        ProgressPayload { task_id: task_id.clone(), pct },
+                        ProgressPayload {
+                            task_id: task_id.clone(),
+                            pct,
+                        },
                     );
                 }
             },
@@ -517,13 +557,25 @@ pub async fn download(
             }
             Err(e) => {
                 let msg = e.to_string();
-                let event = if msg.contains("HALITE_CANCELLED") { "download://cancelled" } else { "download://error" };
-                let _ = app.emit(event, ErrorPayload { task_id, message: msg });
+                let event = if msg.contains("HALITE_CANCELLED") {
+                    "download://cancelled"
+                } else {
+                    "download://error"
+                };
+                let _ = app.emit(
+                    event,
+                    ErrorPayload {
+                        task_id,
+                        message: msg,
+                    },
+                );
             }
         }
     });
 
-    Ok(TaskStarted { task_id: return_task_id })
+    Ok(TaskStarted {
+        task_id: return_task_id,
+    })
 }
 
 #[tauri::command]

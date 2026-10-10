@@ -29,6 +29,7 @@ export function featureError(error) {
     HALITE_STUDIO_NOT_READY: "studio.notReady", HALITE_STUDIO_OUTPUT: "studio.error",
     HALITE_STUDIO_DURATION: "studio.tooLong", HALITE_STUDIO_TIMEOUT: "studio.timeout",
     HALITE_CANCELLED: "studio.cancelled",
+    HALITE_AI_BUSY: "common.aiBusy",
   };
   return t(keys[code] || "common.unexpected");
 }
@@ -60,6 +61,7 @@ export function errorText(error, fallbackKey) {
     HALITE_PREVIEW_DENIED: "common.previewError", HALITE_OUTPUT: "common.outputError",
     HALITE_OPEN_FAILED: "common.openError", HALITE_FFMPEG_SETUP: "common.audioConverterError",
     HALITE_FFMPEG_FAILED: "common.audioConverterError",
+    HALITE_AI_BUSY: "common.aiBusy",
   };
   return t(keys[code] || fallbackKey || "common.unexpected");
 }

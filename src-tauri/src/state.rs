@@ -12,6 +12,50 @@ pub struct Settings {
     pub language: String,
     pub theme: String,
     pub output_dir: Option<String>,
+    pub voice: VoicePreferences,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct VoicePreferences {
+    pub language: String,
+    pub seed: u32,
+    pub exaggeration: f64,
+    pub cfg_weight: f64,
+    pub device: String,
+}
+impl Default for VoicePreferences {
+    fn default() -> Self {
+        Self {
+            language: "auto".into(),
+            seed: 42,
+            exaggeration: 0.5,
+            cfg_weight: 0.5,
+            device: "auto".into(),
+        }
+    }
+}
+impl VoicePreferences {
+    pub fn normalized(mut self) -> Self {
+        if ![
+            "auto", "ar", "da", "de", "el", "en", "es", "fi", "fr", "he", "hi", "it", "ja", "ko",
+            "ms", "nl", "no", "pl", "pt", "ru", "sv", "sw", "tr", "zh",
+        ]
+        .contains(&self.language.as_str())
+        {
+            self.language = "auto".into();
+        }
+        if !self.exaggeration.is_finite() || !(0.0..=2.0).contains(&self.exaggeration) {
+            self.exaggeration = 0.5;
+        }
+        if !self.cfg_weight.is_finite() || !(0.0..=1.0).contains(&self.cfg_weight) {
+            self.cfg_weight = 0.5;
+        }
+        if !["auto", "cpu"].contains(&self.device.as_str()) {
+            self.device = "auto".into();
+        }
+        self
+    }
 }
 
 impl Default for Settings {
@@ -20,6 +64,7 @@ impl Default for Settings {
             language: "auto".to_string(),
             theme: "system".to_string(),
             output_dir: None,
+            voice: VoicePreferences::default(),
         }
     }
 }
@@ -32,6 +77,7 @@ pub struct AppState {
     pub resource_dir: PathBuf,
     pub selected_files: Mutex<HashSet<PathBuf>>,
     pub studio_busy: AtomicBool,
+    pub ai_busy: AtomicBool,
 }
 
 impl AppState {
@@ -46,6 +92,7 @@ impl AppState {
             resource_dir,
             selected_files: Mutex::new(HashSet::new()),
             studio_busy: AtomicBool::new(false),
+            ai_busy: AtomicBool::new(false),
         })
     }
 
@@ -77,6 +124,17 @@ impl AppState {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         flags.remove(job_id);
     }
+
+    pub fn cancel_all(&self) {
+        for flag in self
+            .cancel_flags
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .values()
+        {
+            flag.store(true, std::sync::atomic::Ordering::SeqCst);
+        }
+    }
 }
 
 impl Settings {
@@ -94,6 +152,7 @@ impl Settings {
             .output_dir
             .take()
             .filter(|path| !path.trim().is_empty());
+        self.voice = self.voice.normalized();
         self
     }
 

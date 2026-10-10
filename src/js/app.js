@@ -546,6 +546,8 @@ function setDlProgress(pct) {
 
 // ---------- Settings ----------
 async function saveSettings(patch) {
+  // Preserve preferences changed by feature modules since the last UI update.
+  try { state.settings = await invoke("get_settings"); } catch {}
   state.settings = { ...state.settings, ...patch };
   if (patch.language) {
     await i18n.setLanguage(patch.language);

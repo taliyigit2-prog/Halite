@@ -140,7 +140,8 @@ impl Db {
                 bytes: row.get(2)?,
             })
         })?;
-        rows.collect::<rusqlite::Result<Vec<_>>>().map_err(Error::from)
+        rows.collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(Error::from)
     }
 
     pub fn is_known_stem_path(&self, path: &str) -> Result<bool> {
@@ -157,7 +158,6 @@ impl Db {
             .execute("DELETE FROM jobs WHERE id = ?1", params![id])?;
         Ok(())
     }
-
 }
 
 fn now_millis() -> i64 {

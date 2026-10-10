@@ -28,13 +28,10 @@ pub fn decode_to_stereo(path: &Path) -> Result<(Vec<f32>, u32)> {
         .format
         .default_track()
         .ok_or_else(|| Error::Message("no audio track".to_string()))?;
-    let sample_rate = track
-        .codec_params
-        .sample_rate
-        .unwrap_or(MODEL_SAMPLE_RATE);
+    let sample_rate = track.codec_params.sample_rate.unwrap_or(MODEL_SAMPLE_RATE);
 
-    let mut decoder = symphonia::default::get_codecs()
-        .make(&track.codec_params, &DecoderOptions::default())?;
+    let mut decoder =
+        symphonia::default::get_codecs().make(&track.codec_params, &DecoderOptions::default())?;
 
     let mut out: Vec<f32> = Vec::new();
     let track_id = track.id;
@@ -42,9 +39,7 @@ pub fn decode_to_stereo(path: &Path) -> Result<(Vec<f32>, u32)> {
     loop {
         let packet = match probed.format.next_packet() {
             Ok(p) => p,
-            Err(SymphoniaError::IoError(e))
-                if e.kind() == std::io::ErrorKind::UnexpectedEof =>
-            {
+            Err(SymphoniaError::IoError(e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
                 break
             }
             Err(SymphoniaError::ResetRequired) => continue,
@@ -105,14 +100,20 @@ pub fn resample_stereo(samples: &[f32], from_rate: u32, to_rate: u32) -> Vec<f32
 }
 
 /// Trim stereo samples to the given [start_sec, end_sec) range.
-pub fn trim_stereo(samples: &[f32], sample_rate: u32, start_sec: f64, end_sec: Option<f64>) -> Vec<f32> {
+pub fn trim_stereo(
+    samples: &[f32],
+    sample_rate: u32,
+    start_sec: f64,
+    end_sec: Option<f64>,
+) -> Vec<f32> {
     let total = (samples.len() / 2) as f64 / sample_rate as f64;
     let start = (start_sec.max(0.0) * sample_rate as f64) as usize * 2;
     let end = match end_sec {
         Some(e) => ((e.min(total) * sample_rate as f64) as usize * 2).max(start),
         None => samples.len(),
     };
-    samples.get(start.min(samples.len())..end.min(samples.len()))
+    samples
+        .get(start.min(samples.len())..end.min(samples.len()))
         .unwrap_or(&[])
         .to_vec()
 }
@@ -139,7 +140,11 @@ fn ffmpeg_on_path() -> Option<std::path::PathBuf> {
     let candidates: &[&str] = {
         #[cfg(target_os = "macos")]
         {
-            &["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg", "/usr/bin/ffmpeg"]
+            &[
+                "/opt/homebrew/bin/ffmpeg",
+                "/usr/local/bin/ffmpeg",
+                "/usr/bin/ffmpeg",
+            ]
         }
         #[cfg(target_os = "windows")]
         {
@@ -336,7 +341,11 @@ pub fn transcode(
             status.code()
         )));
     }
-    if std::fs::metadata(output).map(|meta| meta.len()).unwrap_or(0) == 0 {
+    if std::fs::metadata(output)
+        .map(|meta| meta.len())
+        .unwrap_or(0)
+        == 0
+    {
         return Err(Error::Ffmpeg(
             "HALITE_FFMPEG_FAILED|ffmpeg reported success but produced no output".to_string(),
         ));

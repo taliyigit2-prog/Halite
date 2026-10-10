@@ -76,7 +76,7 @@ impl Separator {
             return Err(Error::Message("expected stereo input".to_string()));
         }
 
-        let n_chunks = ((total + STRIDE - 1) / STRIDE).max(1);
+        let n_chunks = total.div_ceil(STRIDE).max(1);
         let window = make_window(N_SAMPLES, OVERLAP);
 
         let mut out: Vec<[Vec<f32>; 2]> = (0..4)
@@ -126,12 +126,12 @@ impl Separator {
             }
 
             // data layout: [4][2][N]
-            for s in 0..4usize {
-                for c in 0..2usize {
+            for (s, stem) in out.iter_mut().enumerate() {
+                for (c, channel) in stem.iter_mut().enumerate() {
                     let base = s * (2 * N_SAMPLES) + c * N_SAMPLES;
                     for j in 0..clen {
                         let w = window[j];
-                        out[s][c][start + j] += data[base + j] * w;
+                        channel[start + j] += data[base + j] * w;
                     }
                 }
             }
@@ -142,12 +142,11 @@ impl Separator {
             on_progress((i + 1) as f64 / n_chunks as f64);
         }
 
-        for s in 0..4usize {
-            for c in 0..2usize {
-                for j in 0..total {
-                    let w = weight[j];
-                    if w > 1e-8 {
-                        out[s][c][j] /= w;
+        for stem in &mut out {
+            for channel in stem {
+                for (sample, w) in channel.iter_mut().zip(&weight) {
+                    if *w > 1e-8 {
+                        *sample /= w;
                     }
                 }
             }
@@ -160,9 +159,7 @@ impl Separator {
 fn make_window(n: usize, overlap: usize) -> Vec<f32> {
     let mut w = vec![1f32; n];
     let denominator = overlap.saturating_sub(1).max(1) as f32;
-    let fade: Vec<f32> = (0..overlap)
-        .map(|i| i as f32 / denominator)
-        .collect();
+    let fade: Vec<f32> = (0..overlap).map(|i| i as f32 / denominator).collect();
     for i in 0..overlap {
         w[i] = fade[i];
         w[n - 1 - i] = fade[i];

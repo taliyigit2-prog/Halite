@@ -14,6 +14,7 @@ function renderEditor() {
     const values = new Set(active.map((file) => file.fields[name] || ""));
     input.value = values.size === 1 ? [...values][0] : "";
     input.placeholder = values.size > 1 ? t("tags.multiple") : "";
+    input.disabled = busy || active.some((file) => !file.supported_fields.includes(name));
   }
   const first = active[0];
   const image = $("#tag-cover");
@@ -21,7 +22,8 @@ function renderEditor() {
   if (first?.cover) image.src = first.cover; else image.removeAttribute("src");
   $("#tag-cover-info").textContent = first?.cover ? t("tags.coverPresent", { count: first.cover_count }) : t("tags.noCover");
   $("#tag-technical").textContent = active.length === 1 ? `${Math.round(first.duration)} s · ${first.sample_rate || "—"} Hz · ${first.channels || "—"} ch · ${first.bitrate || "—"} kbps` : "";
-  $("#tag-restore").disabled = active.length !== 1;
+  $("#tag-restore").disabled = active.length !== 1 || !first?.has_backup;
+  for (const id of ["#tag-cover-pick", "#tag-cover-remove"]) $(id).disabled = active.some((file) => !file.supports_cover);
   $("#tag-export-cover").disabled = active.length !== 1 || !first?.cover;
 }
 function renderList() {
@@ -38,7 +40,13 @@ function setBusy(value) {
   busy = value;
   document.querySelectorAll("#tab-tags button, #tab-tags input, #tab-tags textarea").forEach((element) => { element.disabled = value; });
   $("#tag-status").textContent = value ? t("tags.saving") : "";
-  if (!value) { $("#tag-restore").disabled = activeFiles().length !== 1; $("#tag-export-cover").disabled = activeFiles().length !== 1 || !activeFiles()[0]?.cover; }
+  if (!value) {
+    const active = activeFiles();
+    for (const name of FIELDS) $(`#tag-${name}`).disabled = active.some((file) => !file.supported_fields.includes(name));
+    for (const id of ["#tag-cover-pick", "#tag-cover-remove"]) $(id).disabled = active.some((file) => !file.supports_cover);
+    $("#tag-restore").disabled = active.length !== 1 || !active[0]?.has_backup;
+    $("#tag-export-cover").disabled = active.length !== 1 || !active[0]?.cover;
+  }
 }
 async function pickFiles() {
   try {
@@ -89,7 +97,7 @@ async function search() {
       button.textContent = `${recording.title} · ${artist} · ${release?.title || ""}`;
       button.addEventListener("click", () => {
         const fields = { title: recording.title, artist, album: release?.title, date: release?.date };
-        for (const [name, value] of Object.entries(fields)) { if (value) { $(`#tag-${name}`).value = value; dirty.set(name, value); } }
+        for (const [name, value] of Object.entries(fields)) { if (value && !$(`#tag-${name}`).disabled) { $(`#tag-${name}`).value = value; dirty.set(name, value); } }
         toast(t("tags.matchApplied"));
       });
       list.append(button);

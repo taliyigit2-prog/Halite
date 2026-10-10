@@ -76,8 +76,14 @@ end tell"#
         return None;
     }
     let track = parts[0].trim().to_string();
-    let artist = parts.get(1).map(|s| s.trim().to_string()).unwrap_or_default();
-    let album = parts.get(2).map(|s| s.trim().to_string()).unwrap_or_default();
+    let artist = parts
+        .get(1)
+        .map(|s| s.trim().to_string())
+        .unwrap_or_default();
+    let album = parts
+        .get(2)
+        .map(|s| s.trim().to_string())
+        .unwrap_or_default();
     let duration = parts
         .get(3)
         .and_then(|s| s.trim().parse::<f64>().ok())

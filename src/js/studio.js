@@ -91,6 +91,15 @@ export async function initStudio() {
   const names = new Intl.DisplayNames([i18n.lang], { type: "language" });
   for (const language of LANGUAGES) { const option = document.createElement("option"); option.value = language; option.textContent = names.of(language); $("#studio-language").append(option); }
   $("#studio-language").value = LANGUAGES.includes(i18n.lang) ? i18n.lang : "en";
+  const settings = await invoke("get_settings");
+  const preferences = settings.voice || {};
+  if (LANGUAGES.includes(preferences.language)) $("#studio-language").value = preferences.language;
+  for (const [field, key] of [["seed", "seed"], ["expression", "exaggeration"], ["guidance", "cfg_weight"], ["device", "device"]]) {
+    if (preferences[key] != null) $(`#studio-${field}`).value = preferences[key];
+  }
+  for (const id of ["language", "seed", "expression", "guidance", "device"]) $(`#studio-${id}`).addEventListener("change", async () => {
+    try { await invoke("save_voice_preferences", { preferences: { language: $("#studio-language").value, seed: Number($("#studio-seed").value), exaggeration: Number($("#studio-expression").value), cfg_weight: Number($("#studio-guidance").value), device: $("#studio-device").value } }); } catch (error) { toast(featureError(error), "error"); }
+  });
   $("#studio-mode").addEventListener("change", updateControls);
   $("#studio-text").addEventListener("input", () => { $("#studio-text-count").textContent = `${$("#studio-text").value.length} / 3000`; });
   $("#studio-install").addEventListener("click", prepare);

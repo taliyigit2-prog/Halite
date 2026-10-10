@@ -35,15 +35,16 @@ class WorkerTests(unittest.TestCase):
                 worker.validate({**base, **values})
 
     def test_errors_are_json_protocol_not_stack_traces(self):
-        original_in, original_out = worker.sys.stdin, worker.PROTOCOL_OUT
+        original_in, original_out, original_err = worker.sys.stdin, worker.PROTOCOL_OUT, worker.sys.stderr
         output = io.StringIO()
         try:
             worker.sys.stdin = io.StringIO('{"protocol":1,"command":"invalid"}\n')
             worker.PROTOCOL_OUT = output
+            worker.sys.stderr = io.StringIO()
             self.assertEqual(worker.main(), 1)
             self.assertIn('"code": "HALITE_STUDIO_PROTOCOL"', output.getvalue())
         finally:
-            worker.sys.stdin, worker.PROTOCOL_OUT = original_in, original_out
+            worker.sys.stdin, worker.PROTOCOL_OUT, worker.sys.stderr = original_in, original_out, original_err
 
 if __name__ == "__main__":
     unittest.main()

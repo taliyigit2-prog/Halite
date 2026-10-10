@@ -1,0 +1,3 @@
+# S3Tokenizer declares this development hook as a runtime dependency.
+# It is never imported by its inference modules.
+pre-commit

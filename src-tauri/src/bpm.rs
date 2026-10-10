@@ -47,7 +47,9 @@ pub fn analyze(samples: &[f32], sample_rate: u32) -> Result<Analysis> {
 
 fn downmix(samples: &[f32]) -> Vec<f32> {
     samples
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|frame| (frame[0] + frame[1]) * 0.5)
         .collect()
 }
@@ -151,10 +153,10 @@ fn estimate_key(mono: &[f32], sample_rate: u32) -> Option<(String, String)> {
     for tonic in 0..12 {
         let mut major = 0.0;
         let mut minor = 0.0;
-        for pitch_class in 0..12 {
+        for (pitch_class, value) in chroma.iter().enumerate() {
             let relative = (pitch_class + 12 - tonic) % 12;
-            major += chroma[pitch_class] * MAJOR_PROFILE[relative] as f64;
-            minor += chroma[pitch_class] * MINOR_PROFILE[relative] as f64;
+            major += value * MAJOR_PROFILE[relative] as f64;
+            minor += value * MINOR_PROFILE[relative] as f64;
         }
         if major > best.0 {
             best = (major, tonic, "major");

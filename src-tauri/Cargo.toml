@@ -19,7 +19,7 @@ tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
-lofty = "0.22"
+lofty = "0.25"
 tempfile = "3"
 fs2 = "0.4"
 flate2 = "1"

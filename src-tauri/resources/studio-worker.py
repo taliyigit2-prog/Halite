@@ -59,6 +59,10 @@ def validate(request):
 def run(request):
     validate(request)
     started = time.monotonic()
+    def offline_guard(event, args):
+        if event in {"socket.connect", "socket.connect_ex", "socket.getaddrinfo"}:
+            raise RuntimeError("HALITE_STUDIO_NETWORK_BLOCKED")
+    sys.addaudithook(offline_guard)
     # Any output from third-party libraries is diagnostic, not part of our protocol.
     with contextlib.redirect_stdout(sys.stderr):
         import numpy as np
@@ -76,6 +80,10 @@ def run(request):
         huggingface_hub.hf_hub_download = local_download
         from chatterbox.mtl_tts import ChatterboxMultilingualTTS
         if request["command"] == "check":
+            import perth
+            if perth.PerthImplicitWatermarker is None:
+                raise RuntimeError("HALITE_STUDIO_WATERMARK")
+            perth.PerthImplicitWatermarker()
             emit("done", device="mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu", torch=torch.__version__)
             return
         device = "cpu"

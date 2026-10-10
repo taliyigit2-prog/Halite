@@ -5,10 +5,10 @@ mod db;
 mod downloader;
 mod error;
 mod lyrics;
+mod metadata;
 mod nowplaying;
 mod separation;
 mod state;
-mod metadata;
 mod studio;
 
 use std::sync::Arc;
@@ -20,6 +20,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
+            #[cfg(debug_assertions)]
+            let data_dir = std::env::var_os("HALITE_TEST_DATA_DIR")
+                .map(std::path::PathBuf::from)
+                .unwrap_or(data_dir);
             let resource_dir = app.path().resource_dir()?;
             let app_state = Arc::new(state::AppState::new(data_dir, resource_dir)?);
             app.manage(app_state);
@@ -55,6 +59,7 @@ pub fn run() {
             studio::save_voice_profile,
             studio::list_voice_profiles,
             studio::delete_voice_profile,
+            studio::save_voice_preferences,
             commands::get_settings,
             commands::set_settings,
             commands::get_lyrics,
@@ -63,6 +68,22 @@ pub fn run() {
             commands::analyze,
             commands::get_system_info,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if let tauri::RunEvent::ExitRequested { api, .. } = event {
+                let state = app.state::<Arc<state::AppState>>().inner().clone();
+                state.cancel_all();
+                if state.studio_busy.load(std::sync::atomic::Ordering::SeqCst) {
+                    api.prevent_exit();
+                    let app = app.clone();
+                    tauri::async_runtime::spawn(async move {
+                        while state.studio_busy.load(std::sync::atomic::Ordering::SeqCst) {
+                            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                        }
+                        app.exit(0);
+                    });
+                }
+            }
+        });
 }
