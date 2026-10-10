@@ -25,7 +25,7 @@ fs2 = "0.4"
 flate2 = "1"
 tar = "0.4"
 zip = { version = "2", default-features = false, features = ["deflate"] }
-base64 = "0.22"
+base64 = "0.23"
 
 # Audio decoding
 symphonia = { version = "0.5", features = ["mp3", "aac", "flac", "vorbis", "isomp4", "ogg", "wav", "pcm"] }
