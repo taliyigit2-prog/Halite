@@ -1,154 +1,126 @@
 <div align="center">
 
-<img src="src-tauri/icons/icon.png" alt="Halite" width="120" />
+<img src="src-tauri/icons/icon.png" alt="Halite" width="112" />
 
 # Halite
 
-**Free &amp; open-source AI music toolkit.**
+### Your music. Your device. Your control.
 
-Split any song into stems · Download audio from the web · See synchronized lyrics
+**A free, open-source desktop studio for separating, organising, downloading and understanding music — with local AI.**
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Tauri](https://img.shields.io/badge/made%20with-Tauri-ffc131.svg)](https://tauri.app)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)]()
-[![ONNX Runtime](https://img.shields.io/badge/onnxruntime-CoreML%2FCPU-8a2be2.svg)]()
+[![MIT License](https://img.shields.io/badge/license-MIT-6d5dfc?style=flat-square)](LICENSE)
+[![Tauri 2](https://img.shields.io/badge/desktop-Tauri%202-24c8db?style=flat-square)](https://tauri.app)
+[![Local first](https://img.shields.io/badge/privacy-local--first-38c98b?style=flat-square)](#privacy-by-design)
+[![CI](https://github.com/taliyigit2-prog/Halite/actions/workflows/ci.yml/badge.svg)](https://github.com/taliyigit2-prog/Halite/actions/workflows/ci.yml)
 
-*English · [Türkçe](README.tr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [Русский](README.ru.md) · [日本語](README.ja.md)*
+[Download a release](https://github.com/taliyigit2-prog/Halite/releases) · [Report an issue](https://github.com/taliyigit2-prog/Halite/issues) · [Contribute](#development)
+
+English · [Türkçe](README.tr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [Русский](README.ru.md) · [日本語](README.ja.md)
 
 </div>
 
 ---
 
-## What is Halite?
+## A calm, capable music workspace
 
-Halite is a **free, open-source desktop application** that runs AI-powered music
-tools **entirely on your device** — no cloud, no account, no subscription. It is
-built with [Tauri v2](https://tauri.app) (Rust + web frontend) and uses
-[ONNX Runtime](https://onnxruntime.ai) for on-device inference.
+Halite is a native desktop application built with Rust and Tauri. It keeps the core creative work on your computer: no account, no subscription, and no upload of your audio for separation, tagging or speech generation.
 
-It offers three workspaces:
+| Make | Organise | Explore |
+| --- | --- | --- |
+| **Separate** a song into vocals, drums, bass and other stems with HT-Demucs. | **Edit tags** with a review step, automatic local backup and cover-art support. | **Download** audio with clear progress, or find synchronised lyrics for the track playing now. |
+| **Create speech** locally with the managed Chatterbox Multilingual V3 runtime. | **Preview and export** outputs in formats that suit your workflow. | **Analyse** BPM and key, batch process files, and work in seven interface languages. |
 
-| 🎚️ Separate | ⬇️ Download | 🎤 Lyrics |
-|---|---|---|
-| Split any song into **vocals, drums, bass and other** using the HT-Demucs neural network. | Grab audio from YouTube, SoundCloud, Bandcamp and more via `yt-dlp`. | See **synchronized lyrics** for the song currently playing (Apple Music / Spotify). |
+## What you can do
 
----
+### 🎚️ Separate stems
 
-## ✨ Features
+- 4-stem (vocals, drums, bass, other) and 2-stem (vocals, instrumental) separation.
+- Runs HT-Demucs ONNX models locally, with CoreML on supported Apple Silicon hardware and a safe CPU fallback.
+- Batch queue, trim range, BPM/key analysis, previewable stems and WAV, FLAC, MP3 or M4A export.
 
-- **AI stem separation** — 4-stem (vocals / drums / bass / other) and 2-stem
-  (vocals / instrumental) output, powered by HT-Demucs ONNX models.
-- **Hardware acceleration** — CoreML on Apple Silicon, CPU everywhere else.
-- **Stem preview** — click any stem to listen before exporting.
-- **Batch processing** — queue multiple files at once.
-- **Multiple export formats** — WAV, FLAC, MP3, M4A.
-- **Audio trimming** — process only a section of a track.
-- **BPM & key detection** — quick musical analysis.
-- **Downloader** — `yt-dlp` powered audio downloads with progress.
-- **Synchronized lyrics** — via the free [LRCLIB](https://lrclib.net) API.
-- **7 languages** — English, Türkçe, Deutsch, Español, Français, Русский, 日本語.
-- **Light / dark / system theme**.
-- **100% local & private** — your audio never leaves your machine.
+### 🏷️ Keep your library tidy
 
----
+- Read and edit title, artist, album, album artist, genre, date, disc/track numbers, composer, copyright, comments and embedded lyrics.
+- Add, remove or export artwork; optionally search MusicBrainz without uploading your audio file.
+- Every write is staged, validated, reviewed in the UI and backed up beside the original as `*.halite-backup`. A restore action is available before you discard that backup.
+- Supports common WAV, FLAC, MP3, M4A/MP4, OGG/Opus and AIFF workflows when their tag format supports the field.
 
-## 🖼️ Screenshots
+### 🎙️ Produce local speech
 
-> Screenshots coming soon. Contributions welcome!
+- Optional, managed **Chatterbox Multilingual V3** voice runtime, installed on first use after a clear size notice — no manual Python setup.
+- Text-to-speech and consent-gated reference-voice mode. Reference audio stays on the device; only a 3–30 second local recording is accepted.
+- Generated audio is marked with PerTh watermarking and accompanied by provenance data.
+- Downloads are pinned to known revisions and SHA-256 verified; after setup, the worker blocks network access while generating.
 
----
+### ⬇️ Download and understand
 
-## 📦 Installation
+- Download audio from sites supported by `yt-dlp`, with verified helper updates and visible status.
+- Show synchronised lyrics from LRCLIB for the current Apple Music or Spotify track when available.
+- English, Türkçe, Deutsch, Español, Français, Русский and 日本語 — with light, dark and system themes.
 
-Download the latest release for your platform from the
-[Releases](https://github.com/taliyigit2-prog/Halite/releases) page.
+## Privacy by design
+
+Halite is local-first, not cloud-first.
+
+- Audio separation, metadata editing and speech generation happen on your machine.
+- The voice runtime only downloads its verified components when you choose **Set up automatically**. It needs roughly 11 GB free during setup and stores its model separately from the app bundle.
+- Optional online features are narrow and visible: downloading media uses its source URL, MusicBrainz is queried only when you search, and lyrics are requested from LRCLIB.
+- Halite never asks you to upload your music library or reference voice to use the local tools.
+
+Please process only material you have the right to use, and respect the terms of the sources you download from.
+
+## Install
+
+Get the current package from [GitHub Releases](https://github.com/taliyigit2-prog/Halite/releases).
 
 | Platform | Package |
-|---|---|
+| --- | --- |
 | macOS | `Halite_*.dmg` |
-| Windows | `Halite_*.msi` (or `.exe`) |
-| Linux | `Halite_*.AppImage` (or `.deb`) |
+| Windows | `Halite_*.msi` or `.exe` |
+| Linux | `Halite_*.AppImage` or `.deb` |
 
 ### macOS note
 
-Because the app is not notarized with an Apple Developer account, macOS
-Gatekeeper may warn on first launch. To open it:
+Release builds should be signed and notarised before public distribution. Until a notarised release is available, Gatekeeper may require you to right-click the app and choose **Open** on first launch.
 
-- Right-click the app and choose **Open**, or
-- Run `xattr -d com.apple.quarantine "/Applications/Halite.app"`.
-
-### First run
-
-The AI models are **bundled inside the app** — no download and no manual setup
-needed. Only the Download tab downloads a small helper (`yt-dlp`) the first time
-you use it; that helper is verified and cached in Halite's application-data folder.
-Formats that require conversion also use system FFmpeg or prepare it there once.
-
----
-
-## 🧠 How separation works
-
-Halite uses the open-source
-[HT-Demucs](https://github.com/facebookresearch/demucs) model exported to ONNX:
-
-- `htdemucs.onnx` — high quality, 4 stems (~316 MB)
-- `htdemucs_fp16weights.onnx` — lighter, same stems (~166 MB)
-
-Both models are **bundled in the app** and run locally with
-[ONNX Runtime](https://onnxruntime.ai). They are provided by
-[StemSplitio/htdemucs-onnx](https://huggingface.co/StemSplitio/htdemucs-onnx)
-(MIT).
-
----
-
-## 🛠️ Building from source
+## Development
 
 ### Prerequisites
 
-- [Rust](https://rustup.rs/) 1.92+
-- [Node.js](https://nodejs.org/) 18+
-- [Tauri v2 system dependencies](https://tauri.app/start/prerequisites/)
-
-### Commands
+- [Node.js](https://nodejs.org/) 22 or newer
+- [Rust](https://rustup.rs/) stable
+- [Tauri system prerequisites](https://v2.tauri.app/start/prerequisites/)
 
 ```bash
 git clone https://github.com/taliyigit2-prog/Halite.git
 cd Halite
-npm install
-npm run tauri dev       # development
-npm run tauri build     # release bundle
+npm ci
+npm run tauri dev
 ```
 
----
+Useful checks:
 
-## 🗺️ Roadmap
+```bash
+npm run check-locales
+npm run check-js
+npm test
+cargo test --locked --manifest-path src-tauri/Cargo.toml
+cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+```
 
-- [ ] 6-stem model (guitar + piano)
-- [ ] Menu-bar quick access
-- [ ] Album artwork fetching for the lyrics view
+`npm run tauri build` creates the platform bundle. The Chatterbox model is deliberately **not** embedded in that bundle: it is a large, optional, hash-verified first-use download.
 
----
+## Security and supply chain
 
-## 🙏 Acknowledgements
+- GitHub Actions use least-privilege workflow permissions and commit-pinned actions.
+- CI checks JavaScript, locale completeness, Rust format/tests/lints, dependency advisories and secret exposure.
+- Dependabot monitors npm, Cargo and workflow dependencies weekly.
+- Runtime downloads use pinned manifests, expected sizes and SHA-256 verification. The source archive extraction rejects path traversal and symlinks.
 
-Halite stands on the shoulders of these great open-source projects:
+Please report security concerns privately to the repository maintainers rather than opening a public issue.
 
-- [facebookresearch/demucs](https://github.com/facebookresearch/demucs) — HT-Demucs model (MIT)
-- [StemSplitio/htdemucs-onnx](https://huggingface.co/StemSplitio/htdemucs-onnx) — ONNX export (MIT)
-- [pykeio/ort](https://github.com/pykeio/ort) — ONNX Runtime for Rust
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) — media downloader
-- [LRCLIB](https://lrclib.net) — open lyrics database
-- [Tauri](https://tauri.app) — the app framework
-- [AnaghSharma/Carol](https://github.com/AnaghSharma/Carol) — inspiration for the lyrics view
+## Credits and licenses
 
----
+Halite is MIT licensed. Its model and runtime ecosystem remains the work of many open-source projects, including [Demucs](https://github.com/facebookresearch/demucs), [StemSplitio’s ONNX export](https://huggingface.co/StemSplitio/htdemucs-onnx), [Chatterbox](https://github.com/resemble-ai/chatterbox), [Lofty](https://github.com/Serial-ATA/lofty-rs), [yt-dlp](https://github.com/yt-dlp/yt-dlp), [LRCLIB](https://lrclib.net) and [Tauri](https://tauri.app).
 
-## 📄 License
-
-Halite is released under the [MIT License](LICENSE). The AI models are MIT
-licensed by their respective authors. See [Third-party notices](THIRD_PARTY_NOTICES.md)
-for bundled and runtime-downloaded components.
-
-> **Disclaimer:** Halite is provided for personal, educational and fair use.
-> Please respect the copyright and terms of service of the content you process
-> or download.
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for component-specific notices and licences.

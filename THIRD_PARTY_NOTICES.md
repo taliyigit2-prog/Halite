@@ -33,3 +33,31 @@ notices supplied by the selected build distributor.
 Lyrics are requested at runtime from [LRCLIB](https://lrclib.net). Lyrics are not
 bundled with Halite and remain subject to their respective rights.
 
+## Metadata editing
+
+Halite uses [Lofty](https://github.com/Serial-ATA/lofty-rs) to read and write
+local audio metadata. Lofty is dual-licensed under Apache-2.0 and MIT. Halite
+does not send the selected audio file to a metadata service. The optional
+MusicBrainz lookup sends only the text query entered by the user and is subject
+to [MusicBrainz](https://musicbrainz.org/) terms and rate limits.
+
+## Chatterbox Multilingual V3 voice runtime
+
+The optional Voice Studio downloads the reviewed source revision and model
+revision of [Resemble AI Chatterbox](https://github.com/resemble-ai/chatterbox)
+on first use. Chatterbox source code and the V3 model are licensed under MIT;
+the exact revision, file sizes and SHA-256 values are shipped in
+`src-tauri/resources/studio-manifest.json` and verified before use.
+
+The managed Python environment includes PyTorch, Torchaudio, Transformers,
+Diffusers, PerTh, S3Tokenizer and their transitive dependencies under their own
+licences. It is not bundled in the Halite installer. Generated Voice Studio
+audio is marked with the PerTh watermarking library. See the installed runtime's
+package metadata for the complete dependency notices.
+
+## uv
+
+The Voice Studio obtains the pinned `uv` runtime from
+[Astral](https://github.com/astral-sh/uv) to create its isolated local Python
+environment. uv is distributed under Apache-2.0 or MIT, at the user's option.
+
