@@ -24,7 +24,7 @@ tempfile = "3"
 fs2 = "0.4"
 flate2 = "1"
 tar = "0.4"
-zip = { version = "2", default-features = false, features = ["deflate"] }
+zip = { version = "4", default-features = false, features = ["deflate"] }
 base64 = "0.22"
 
 # Audio decoding
