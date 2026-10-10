@@ -4,7 +4,7 @@ version = "1.0.0"
 requires-python = ">=3.11,<3.12"
 # Reviewed inference dependencies. Upstream demo/web dependencies are omitted.
 dependencies = [
-  "torch==2.6.0; (sys_platform == 'darwin' or platform_machine != 'x86_64') and python_version == '3.11'",
+  "torch==2.13.0; (sys_platform == 'darwin' or platform_machine != 'x86_64') and python_version == '3.11'",
   "torch==2.6.0+cpu; sys_platform != 'darwin' and platform_machine == 'x86_64' and python_version == '3.11'",
   "torchaudio==2.6.0; (sys_platform == 'darwin' or platform_machine != 'x86_64') and python_version == '3.11'",
   "torchaudio==2.6.0+cpu; sys_platform != 'darwin' and platform_machine == 'x86_64' and python_version == '3.11'",
