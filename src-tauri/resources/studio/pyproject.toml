@@ -10,7 +10,7 @@ dependencies = [
   "torchaudio==2.6.0+cpu; sys_platform != 'darwin' and platform_machine == 'x86_64' and python_version == '3.11'",
   "numpy==1.26.4; python_version == '3.11'",
   "librosa==0.11.0; python_version == '3.11'",
-  "transformers==5.2.0; python_version == '3.11'",
+  "transformers==5.10.1; python_version == '3.11'",
   "diffusers==0.29.0; python_version == '3.11'",
   "resemble-perth==1.0.1; python_version == '3.11'",
   "conformer==0.3.2; python_version == '3.11'",
